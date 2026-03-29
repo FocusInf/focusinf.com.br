@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<head>
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <title>Curso em Cyber Security – Focus.inf</title>
+    <meta name="description" content="Curso completo Cyber Security pela Focus.inf. Curso + IA + Comunidade exclusiva na Hotmart.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        focus: {
+                            dark: '#0f172a',
+                            primary: '#3b82f6',
+                            secondary: '#6366f1',
+                            accent: '#06b6d4',
+                            surface: '#1e293b',
+                            light: '#f8fafc',
+                            matrix: '#00d4ff'
+                        }
+                    },
+                    zIndex: {
+                        '5': '5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .section-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+        }
+        
+        .grid-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #matrix-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .matrix-text {
+            font-family: 'JetBrains Mono', monospace;
+            color: #06b6d4;
+        }
+    </style>
+
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
+                        <span class="text-white font-bold text-xl">F</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-lg tracking-tight text-slate-900 leading-none">
+                            Focus<span class="text-blue-600">.inf</span>
+                        </span>
+                        <span class="text-[10px] text-slate-500 font-medium tracking-wider">CYBER SECURITY</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#inicio" class="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm">Início</a>
+                    <a href="#curso" class="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm">O Curso</a>
+                    <a href="#combo" class="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm">Combo</a>
+                    <a href="#ameacas" class="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm">Ameaças</a>
+                    <a href="#contato" class="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm">Contato</a>
+                    <a href="https://hotmart.com/pt-br/club/formacao-em-cyber-security-focusinf/products/6822801?from=EditProductPage" target="_blank"
+                       class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-medium text-sm hover:bg-slate-800 transition-all inline-block">
+                        Acesso
+                    </a>
+                </div>
+                <button class="md:hidden text-slate-600" onclick="toggleMobileMenu()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden bg-white border-t border-slate-200">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="#inicio" class="block px-3 py-2 text-slate-600 hover:text-blue-600 font-medium">Início</a>
+                <a href="#curso" class="block px-3 py-2 text-slate-600 hover:text-blue-600 font-medium">O Curso</a>
+                <a href="#combo" class="block px-3 py-2 text-slate-600 hover:text-blue-600 font-medium">Combo</a>
+                <a href="#ameacas" class="block px-3 py-2 text-slate-600 hover:text-blue-600 font-medium">Ameaças</a>
+                <a href="#contato" class="block px-3 py-2 text-slate-600 hover:text-blue-600 font-medium">Contato</a>
+                <a href="https://go.hotmart.com/H103434658E?dp=1" target="_blank" class="block px-3 py-2 bg-slate-900 text-white rounded-lg font-medium text-center">Matricular</a>
+            </div>
+        </div>
+    </nav>
+
+<!-- Banner Principal -->
+<section class="relative z-[1] pt-28 pb-2">  <!-- ← Adicione relative z-[1] -->
+  <div class="max-w-7xl mx-auto px-4">
+    <img 
+      src="https://i.postimg.cc/hjN5nQbh/Whats_App_Image_2026_03_26_at_18_55_10.jpg" 
+      alt="Focus.inf Banner"
+      class="w-full max-w-5xl mx-auto h-[480px] object-cover object-[center_20%] rounded-2xl shadow-lg"
+    >
+  </div>
+</section>
+     
+<!-- Hero Section -->
+<section id="inicio" class="relative z-[10] flex items-center py-2 md:py-10 bg-gradient-to-br from-slate-50 via-white to-blue-50 grid-pattern overflow-hidden">
+  <canvas id="matrix-canvas" class="absolute inset-0 -z-10 opacity-50 pointer-events-none"></canvas>  <!-- ← z-index negativo -->
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-[10]">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="animate-fade-in">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-6">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                        Turma aberta • Vagas limitadas
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight mb-6">
+                        Curso completo <br>
+                        <span class="gradient-text">Cyber Security</span>
+                    </h1>
+                    <p class="text-lg text-slate-900 font-bold mb-8 leading-relaxed max-w-lg drop-shadow-sm">
+                        Hacker é a arte de transformar conhecimento em poder.
+                    </p>
+                    <p class="text-lg text-slate-600 mb-2 leading-relaxed max-w-lg">
+                        Domine a segurança cibernética com metodologia prática da Focus.inf.
+                    </p>
+                    <p class="text-lg text-slate-600 mb-2 leading-relaxed max-w-lg">
+                        Curso estruturado + Inteligência Artificial + Comunidade exclusiva para alunos.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <a href="https://go.hotmart.com/U104980948C" target="_blank" class="btn-primary px-8 py-4 text-white font-semibold rounded-lg text-center inline-block">
+                            Combo Curso + IA + Comunidade
+                        </a>
+                        <a href="https://go.hotmart.com/H103434658E?dp=1" target="_blank" class="btn-primary px-8 py-4 text-white font-semibold rounded-lg text-center inline-block">
+                            Ver curso individual
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200">
+                        <div>
+                            <div class="text-2xl font-bold text-slate-900">Do Zero</div>
+                            <div class="text-sm text-slate-500">Aprenda mesmo sem experiência</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-900">IA</div>
+                            <div class="text-sm text-slate-500">Aprenda mais rápido com tecnologia</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-900 matrix-text">Comunidade</div>
+                            <div class="text-sm text-slate-500">Networking e suporte contínuo</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl blur-3xl opacity-20"></div>
+                    <div class="relative bg-white rounded-2xl shadow-2xl p-8 border border-slate-100">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-900">Curso Focus.inf</h3>
+                                <p class="text-sm text-slate-500">Metodologia prática e atualizada</p>
+                            </div>
+                        </div>
+                        
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-sm text-slate-600">Conteúdo sempre atualizado com novas tecnologias</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-sm text-slate-600">Projetos práticos do zero ao profissional</span>
+                            </li>
+                             <li class="flex items-start gap-3">
+                                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-sm text-slate-600">Aplicar Inteligência Artificial na segurança digital.
+</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-sm text-slate-600">Acesso à comunidade exclusiva de alunos</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-8 pt-6 border-t border-slate-100">
+                            <a href="https://hotmart.com/pt-br/club/formacao-em-cyber-security-focusinf/products/6822801?from=EditProductPage" target="_blank" class="w-full btn-primary py-4 text-white font-bold rounded-xl text-center shadow-lg block">
+                                Começar Agora
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- O Curso -->
+    <section id="curso" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">O que você vai aprender</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto">
+                    Curso estruturado em módulos progressivos. Mesmo começando do zero, você vai aprender na prática como proteger sistemas, identificar vulnerabilidades e aplicar Inteligência Artificial na segurança digital.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-hover">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Fundamentos de Segurança</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Aprenda os princípios essenciais da cibersegurança, incluindo criptografia, firewalls, redes seguras e gestão de riscos para proteger sistemas com práticas utilizadas no mercado.
+                    </p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-hover">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Análise de Ameaças</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Domine como identificar e neutralizar ameaças reais como malware, phishing, ransomware, APTs e vetores de ataque modernos.
+                    </p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-hover">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Resposta a Incidentes</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Domine como responder a ataques reais, identificar evidências digitais, conter invasões rapidamente e recuperar sistemas com segurança.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Combo Section -->
+<section id="combo" class="py-24 relative overflow-hidden">
+
+    <!-- IMAGEM -->
+    <div class="absolute inset-0 bg-cover bg-center opacity-20"
+         style="background-image: url('https://i.postimg.cc/Gtx5rrFT/Ciberseguranca-e-inteligencia-artificial-conectada.png');">
+    </div>
+
+    <!-- CAMADA ESCURA -->
+    <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/80"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <span class="text-blue-400 font-bold tracking-widest text-xs uppercase">Oferta Exclusiva</span>
+                <h2 class="text-3xl md:text-5xl font-bold mt-4 mb-6">Combo Completo Focus.inf</h2>
+                <p class="text-blue-100 max-w-2xl mx-auto text-lg">
+                    Curso Completo + IA Integrada + Comunidade Ativa
+                </p>
+                <p class="text-blue-200/80 max-w-2xl mx-auto mt-4">
+                    Tudo o que você precisa para sair do zero, aprenda na prática, utilize inteligência artificial no seu dia a dia e evolua com o apoio de uma comunidade focada em crescimento.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Curso -->
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Curso Completo Cyber Security</h3>
+                    <ul class="space-y-3 text-sm text-blue-100">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Conteúdo sempre atualizado com novas técnicas
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Projetos práticos baseados em cenários reais
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Aprendizado do zero ao avançado com prática
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- IA -->
+                <div class="bg-blue-600 rounded-2xl p-8 shadow-2xl scale-105 border border-blue-400 relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-blue-600 px-4 py-1 rounded-full text-xs font-bold uppercase shadow-lg">Popular</div>
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">IA Integrada ao Aprendizado</h3>
+                    <ul class="space-y-3 text-sm text-white/90">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Tutor inteligente disponível 24/7
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Geração automática de laboratórios práticos
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Análise de vulnerabilidades e suporte
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Comunidade -->
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Comunidade Ativa e Networking</h3>
+                    <ul class="space-y-3 text-sm text-blue-100">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Acesso à comunidade dentro da plataforma
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Networking com alunos da área
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Suporte coletivo e troca de experiências
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <a href="https://go.hotmart.com/U104980948C" target="_blank" class="inline-flex items-center gap-2 px-10 py-5 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all shadow-xl">
+                    Garantir meu combo agora
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+                <p class="mt-4 text-sm text-blue-100">Garantia de 7 dias • Acesso imediato • Atualizações constantes</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Threats Table Section -->
+    <section id="ameacas" class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                    Catálogo Premium de <span class="gradient-text">Ameaças Cibernéticas</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto mb-8">
+                    Baseado no OWASP Top 10 e vetores de ataque modernos (2024-2025). Clique em um ataque para ver detalhes técnicos.
+                </p>
+                
+                <div class="flex flex-wrap justify-center gap-2 mb-8">
+                    <button onclick="filterTable('all')" class="filter-btn active px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 transition-all" data-filter="all">Todas</button>
+                    <button onclick="filterTable('web')" class="filter-btn px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all" data-filter="web">Web & API</button>
+                    <button onclick="filterTable('malware')" class="filter-btn px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all" data-filter="malware">Malware & Ransomware</button>
+                    <button onclick="filterTable('network')" class="filter-btn px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all" data-filter="network">Infra & Rede</button>
+                    <button onclick="filterTable('social')" class="filter-btn px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all" data-filter="social">Engenharia Social</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200">
+                                <th class="p-4 font-semibold text-slate-900 text-sm">Vetor de Ataque</th>
+                                <th class="p-4 font-semibold text-slate-900 text-sm">Defesa Recomendada</th>
+                                <th class="p-4 font-semibold text-slate-900 text-sm text-center">Criticidade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="threats-table" class="text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="detail-card" class="mt-8 bg-white p-8 rounded-2xl border-l-8 border-blue-500 shadow-2xl hidden animate-fade-in">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-2xl font-bold text-slate-900" id="detail-title"></h3>
+                    <span id="detail-badge" class="px-4 py-1 rounded-full text-xs font-bold uppercase"></span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-blue-600 font-bold text-sm uppercase tracking-wider mb-2">Descrição & Observações</h4>
+                        <p class="text-slate-600 leading-relaxed" id="detail-notes"></p>
+                    </div>
+                    <div>
+                        <h4 class="text-green-600 font-bold text-sm uppercase tracking-wider mb-2">Estratégia de Defesa</h4>
+                        <p class="text-slate-600 leading-relaxed" id="detail-defense"></p>
+                    </div>
+                </div>
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <h4 class="text-red-500 font-bold text-sm uppercase tracking-wider mb-2">Impacto no Negócio</h4>
+                    <p class="text-slate-600 italic" id="detail-impact"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contato" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                    Junte-se à <span class="gradient-text">Focus.inf</span> e evolua mais rápido
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto">
+                    Tenha acesso a uma comunidade ativa, conteúdos exclusivos, networking com alunos e suporte contínuo para acelerar sua jornada na cibersegurança.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Contato Direto
+                    </h3>
+                    <p class="text-slate-600 text-sm mb-4">
+                        Dúvidas sobre o Curso, parcerias ou suporte técnico?
+                    </p>
+                    <a href="mailto:focus.inf31@gmail.com" class="text-blue-600 font-medium hover:underline">
+                        focus.inf31@gmail.com
+                    </a>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Comunidade Hotmart
+                    </h3>
+                    <p class="text-slate-600 text-sm mb-4">
+                        Acesse a comunidade exclusiva dentro da plataforma Hotmart após a matrícula.
+                    </p>
+                    <a href="https://hotmart.com/pt-br/club/formacao-em-cyber-security-focusinf/products/6822801?from=EditProductPage" target="_blank" class="inline-flex items-center gap-2 text-orange-500 font-medium hover:underline">
+                        Acessar combo na Hotmart
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 bg-slate-900 text-slate-400 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">© 2026 Focus.inf – Todos os direitos reservados.</p>
+            <div class="mt-4 flex justify-center space-x-6">
+                 <a href="pages/termos.html" class="text-xs hover:text-blue-500 transition-colors">Termos de Uso</a>
+                 <a href="pages/privacidade.html" class="text-xs hover:text-blue-500 transition-colors">Política de Privacidade</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Matrix Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(248, 250, 252, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // --- CATALOGO EXPANDIDO E PROFISSIONAL ---
+        const threatsData = [
+            // WEB & API
+            {
+                type: 'Broken Access Control (OWASP #1)',
+                defense: 'Princípio do menor privilégio, negação por padrão e auditorias de permissões.',
+                notes: 'Vulnerabilidade onde usuários podem acessar dados ou funcionalidades fora de suas permissões pretendidas. É o risco #1 do OWASP.',
+                severity: 'Crítica',
+                category: 'web',
+                impact: 'Exposição de dados sensíveis, modificação ou destruição de dados e comprometimento total de contas.'
+            },
+            {
+                type: 'SQL Injection (SQLi)',
+                defense: 'Uso de Prepared Statements (Consultas Parametrizadas), ORMs seguros e validação rigorosa de inputs.',
+                notes: 'Injeção de comandos SQL maliciosos em campos de entrada para manipular o banco de dados.',
+                severity: 'Crítica',
+                category: 'web',
+                impact: 'Vazamento total de banco de dados, bypass de autenticação e perda de integridade dos dados.'
+            },
+            {
+                type: 'Cross-Site Scripting (XSS)',
+                defense: 'Escaping de saída (Context-aware output encoding) e implementação de Content Security Policy (CSP).',
+                notes: 'Execução de scripts maliciosos no navegador da vítima através de aplicações web vulneráveis.',
+                severity: 'Alta',
+                category: 'web',
+                impact: 'Roubo de cookies de sessão, redirecionamento malicioso e captura de credenciais em tempo real.'
+            },
+            {
+                type: 'Server-Side Request Forgery (SSRF)',
+                defense: 'Listas de permissão (Allow-lists) para domínios de saída e desativação de redirecionamentos HTTP automáticos.',
+                notes: 'O atacante induz o servidor a fazer requisições para recursos internos ou externos protegidos.',
+                severity: 'Alta',
+                category: 'web',
+                impact: 'Escaneamento de rede interna, acesso a metadados de nuvem (AWS/Azure) e bypass de firewalls.'
+            },
+            {
+                type: 'API Broken Object Level Authorization (BOLA)',
+                defense: 'Implementação de verificações de autorização baseadas no usuário para cada acesso a recursos via ID.',
+                notes: 'Exploração de endpoints de API que não verificam se o usuário tem permissão para acessar um objeto específico via ID.',
+                severity: 'Crítica',
+                category: 'web',
+                impact: 'Vazamento massivo de dados de usuários através de APIs mal protegidas.'
+            },
+            {
+                type: 'Cross-Site Request Forgery (CSRF)',
+                defense: 'Uso de Anti-CSRF Tokens e atributos SameSite em cookies.',
+                notes: 'Força um usuário autenticado a executar ações indesejadas em uma aplicação web sem seu conhecimento.',
+                severity: 'Média',
+                category: 'web',
+                impact: 'Alteração de senhas, e-mails ou transferências financeiras não autorizadas.'
+            },
+
+            // MALWARE & RANSOMWARE
+            {
+                type: 'Ransomware de Extorsão Dupla',
+                defense: 'Backups offline/imutáveis, segmentação de rede (Zero Trust) e EDR (Endpoint Detection and Response).',
+                notes: 'Criptografa dados e também ameaça vazar informações sensíveis caso o resgate não seja pago.',
+                severity: 'Crítica',
+                category: 'malware',
+                impact: 'Paralisação total das operações, danos irreparáveis à reputação e multas pesadas (LGPD).'
+            },
+            {
+                type: 'Advanced Persistent Threats (APT)',
+                defense: 'Monitoramento de tráfego lateral, análise de comportamento de rede e caça a ameaças (Threat Hunting).',
+                notes: 'Ataques furtivos e contínuos, geralmente orquestrados por grupos financiados por estados ou grandes organizações criminosas.',
+                severity: 'Crítica',
+                category: 'malware',
+                impact: 'Espionagem industrial prolongada e roubo silencioso de propriedade intelectual estratégica.'
+            },
+            {
+                type: 'Cryptojacking',
+                defense: 'Monitoramento de uso de CPU/GPU e bloqueio de scripts de mineração via extensões de segurança ou WAF.',
+                notes: 'Uso não autorizado de recursos de hardware de terceiros para minerar criptomoedas.',
+                severity: 'Baixa',
+                category: 'malware',
+                impact: 'Degradação de performance, aumento de custos de energia e desgaste prematuro de hardware.'
+            },
+            {
+                type: 'Trojan de Acesso Remoto (RAT)',
+                defense: 'Desativação de macros, controle de execução de binários e monitoramento de conexões de saída suspeitas.',
+                notes: 'Malware que fornece controle total do sistema infectado para o atacante remotamente.',
+                severity: 'Alta',
+                category: 'malware',
+                impact: 'Vigilância via webcam/microfone, roubo de arquivos e uso do host para ataques secundários.'
+            },
+
+            // INFRA & REDE
+            {
+                type: 'Ataques de Cadeia de Suprimentos (Supply Chain)',
+                defense: 'Análise de composição de software (SCA), verificação de hashes de dependências e auditoria de fornecedores.',
+                notes: 'Ataque que compromete uma organização através de vulnerabilidades em seus fornecedores de software ou hardware.',
+                severity: 'Crítica',
+                category: 'network',
+                impact: 'Comprometimento em massa de clientes que utilizam o software legítimo infectado (Ex: SolarWinds).'
+            },
+            {
+                type: 'DDoS (Distributed Denial of Service)',
+                defense: 'Serviços de mitigação em nuvem (Cloudflare/Akamai), Rate Limiting e Anycast Network.',
+                notes: 'Sobrecarga de servidores ou redes com tráfego massivo originado de botnets.',
+                severity: 'Alta',
+                category: 'network',
+                impact: 'Indisponibilidade de serviços críticos e perdas financeiras diretas por downtime.'
+            },
+            {
+                type: 'DNS Cache Poisoning',
+                defense: 'Implementação de DNSSEC e uso de resolvedores DNS modernos e protegidos.',
+                notes: 'Corrupção de tabelas DNS para redirecionar usuários de sites legítimos para servidores maliciosos.',
+                severity: 'Alta',
+                category: 'network',
+                impact: 'Redirecionamento massivo para sites de phishing e interceptação de comunicações criptografadas.'
+            },
+            {
+                type: 'Ataques a Dispositivos IoT',
+                defense: 'Alteração de senhas padrão, isolamento em VLANs dedicadas e desativação de protocolos UPnP.',
+                notes: 'Exploração de falhas em câmeras, roteadores e dispositivos "smart" com baixa segurança.',
+                severity: 'Média',
+                category: 'network',
+                impact: 'Criação de botnets massivas e invasão de privacidade doméstica ou industrial.'
+            },
+
+            // ENGENHARIA SOCIAL
+            {
+                type: 'Business Email Compromise (BEC)',
+                defense: 'Processos rigorosos de aprovação financeira e treinamento de conscientização contra fraudes.',
+                notes: 'Golpe sofisticado onde o atacante se passa por um executivo ou fornecedor para solicitar transferências bancárias.',
+                severity: 'Crítica',
+                category: 'social',
+                impact: 'Prejuízos financeiros diretos de milhões de dólares e quebra de confiança corporativa.'
+            },
+            {
+                type: 'Spear Phishing Baseado em IA',
+                defense: 'Uso de ferramentas de segurança de e-mail com IA e autenticação multifator (MFA) resistente a phishing.',
+                notes: 'Uso de modelos de linguagem para criar e-mails de phishing altamente personalizados e sem erros gramaticais.',
+                severity: 'Alta',
+                category: 'social',
+                impact: 'Alta taxa de sucesso na captura de credenciais de administradores de sistemas.'
+            },
+            {
+                type: 'Juice Jacking',
+                defense: 'Uso de "bloqueadores de dados USB" (USB condoms) e preferência por tomadas elétricas AC em vez de portas USB públicas.',
+                notes: 'Ataque via portas de carregamento USB públicas que instalam malware ou copiam dados do dispositivo.',
+                severity: 'Baixa',
+                category: 'social',
+                impact: 'Roubo de fotos, contatos e instalação de spywares em dispositivos móveis.'
+            }
+        ];
+
+        function renderTable(data) {
+            const tbody = document.getElementById('threats-table');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            data.forEach((threat, index) => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-100 hover:bg-blue-50/50 transition-colors cursor-pointer group';
+                row.onclick = () => showDetail(threat);
+                const sevClass = {
+                    'Crítica': 'bg-red-100 text-red-700',
+                    'Alta': 'bg-orange-100 text-orange-700',
+                    'Média': 'bg-blue-100 text-blue-700',
+                    'Baixa': 'bg-slate-100 text-slate-600'
+                };
+                row.innerHTML = `
+                    <td class="p-4 text-slate-900 font-semibold group-hover:text-blue-600 transition-colors">${threat.type}</td>
+                    <td class="p-4 text-slate-600">${threat.defense.substring(0, 60)}...</td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${sevClass[threat.severity]}">
+                            ${threat.severity}
+                        </span>
+                    </td>
+                `;
+                row.style.opacity = '0';
+                row.style.animation = `fadeIn 0.3s ease-out ${index * 0.03}s forwards`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterTable(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === category) {
+                    btn.classList.add('active');
+                    btn.classList.remove('text-slate-600', 'hover:border-blue-500', 'hover:text-blue-600');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('text-slate-600', 'hover:border-blue-500', 'hover:text-blue-600');
+                }
+            });
+            const filtered = category === 'all' ? threatsData : threatsData.filter(t => t.category === category);
+            renderTable(filtered);
+        }
+
+        function showDetail(threat) {
+            const card = document.getElementById('detail-card');
+            const badge = document.getElementById('detail-badge');
+            document.getElementById('detail-title').textContent = threat.type;
+            document.getElementById('detail-notes').textContent = threat.notes;
+            document.getElementById('detail-defense').textContent = threat.defense;
+            document.getElementById('detail-impact').textContent = threat.impact;
+            
+            badge.textContent = threat.severity;
+            const sevColors = {
+                'Crítica': 'bg-red-600 text-white',
+                'Alta': 'bg-orange-500 text-white',
+                'Média': 'bg-blue-500 text-white',
+                'Baixa': 'bg-slate-500 text-white'
+            };
+            badge.className = `px-4 py-1 rounded-full text-xs font-bold uppercase ${sevColors[threat.severity]}`;
+            
+            card.classList.remove('hidden');
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        renderTable(threatsData);
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    </script>
+</body>
+</html>
