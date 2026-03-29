@@ -108,6 +108,14 @@
             font-family: 'JetBrains Mono', monospace;
             color: #06b6d4;
         }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 4s linear infinite;
+}
     </style>
 
 </head>
@@ -176,10 +184,15 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-[10]">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
                 <div class="animate-fade-in">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-6">
-                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                        Lançamento em breve • Turmas limitadas
-                    </div>
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 mb-6">
+    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+
+    <span class="bg-gradient-to-r from-blue-700 via-cyan-400 to-blue-700 
+                 bg-[length:200%_100%] bg-clip-text text-transparent 
+                 animate-shimmer font-semibold text-base">
+        Lançamento em breve • Turmas limitadas
+    </span>
+</div>
                     <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight mb-6">
                         Curso completo <br>
                         <span class="gradient-text">Cyber Security</span>
