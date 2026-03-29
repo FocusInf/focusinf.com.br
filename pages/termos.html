@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Termos de Uso - Focus.inf</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .gradient-text {
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #matrix-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .matrix-image {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300">
+
+ <!-- VOLTAR -->
+
+<a href="../index.html" class="text-blue-400 hover:text-blue-300 transition">
+  ← Voltar para o site
+</a>
+</div>
+
+  <!-- IMAGEM COM MATRIX - IMAGEM REDUZIDA EM 50%, CANVAS ORIGINAL -->
+  <section class="pt-10 pb-6">
+    <div class="max-w-5xl mx-auto px-20 relative h-72">
+      <!-- CANVAS MATRIX - TAMANHO ORIGINAL -->
+      <canvas id="matrix-overlay" class="absolute inset-0 w-full h-72 rounded-2xl"></canvas>
+      
+      <!-- IMAGEM - REDUZIDA EM 50% E CENTRALIZADA -->
+      <div class="absolute inset-0 flex items-center justify-center z-10">
+        <img 
+          src="https://i.postimg.cc/PJDgnvZJ/Chat-GPT-Image-17-de-mar-de-2026-08-40-00.png"
+          alt="Focus.inf Banner"
+          class="matrix-image w-1/2 h-1/2 object-cover rounded-2xl shadow-lg"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTEÚDO -->
+  <div class="max-w-4xl mx-auto px-6 pb-16">
+    <h1 class="text-4xl font-bold text-white mb-4">
+      Termos de <span class="gradient-text">Uso</span>
+    </h1>
+    <p class="text-slate-400 mb-10">
+      Última atualização: 2026
+    </p>
+    <div class="space-y-10 leading-relaxed">
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">01.</span> Objeto</h2>
+        <p>O Focus.inf é uma plataforma digital voltada a conteúdos educacionais em tecnologia e cibersegurança.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">02.</span> Aceitação dos Termos</h2>
+        <p>Ao acessar o site, o usuário concorda com estes termos.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">03.</span> Propriedade Intelectual</h2>
+        <p>Conteúdos protegidos por direitos autorais.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">04.</span> Segurança</h2>
+        <p>Não garantimos ausência total de falhas.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">05.</span> Uso Permitido</h2>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Uso legal e responsável</li>
+          <li>Proibido invadir ou comprometer o site</li>
+          <li>Proibido uso indevido do conteúdo</li>
+        </ul>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">06.</span> Responsabilidade</h2>
+        <p>Uso das informações é responsabilidade do usuário.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">07.</span> Links Externos</h2>
+        <p>Não nos responsabilizamos por terceiros.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">08.</span> Privacidade</h2>
+        <p>Consulte a Política de Privacidade.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">09.</span> Modificações</h2>
+        <p>Os termos podem mudar a qualquer momento.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">10.</span> Legislação</h2>
+        <p>Regido pelas leis do Brasil.</p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Matrix Effect para o Canvas
+    const canvas = document.getElementById('matrix-overlay');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      
+      function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+      
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      
+      const chars = '01ΔΣЖアβΨλΩカЖΞΦБツØΛΞΨЖΩβΔΣΦカサタナツアイウエオ';
+      const fontSize = 14;
+      let columns = Math.floor(canvas.width / fontSize);
+      const drops = Array(columns).fill(1);
+      
+      function drawMatrix() {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#3b82f6';
+        ctx.font = fontSize + 'px monospace';
+        
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+          
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+      
+      setInterval(drawMatrix, 50);
+    }
+  </script>
+</body>
+</html>

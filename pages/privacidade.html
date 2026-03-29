@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Política de Privacidade - Focus.inf</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .gradient-text {
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #matrix-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .matrix-image {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300">
+
+  <!-- VOLTAR -->
+
+<a href="../index.html" class="text-blue-400 hover:text-blue-300 transition">
+  ← Voltar para o site
+</a>
+</div>
+
+  <!-- IMAGEM COM MATRIX - IMAGEM REDUZIDA EM 50%, CANVAS ORIGINAL -->
+  <section class="pt-10 pb-6">
+    <div class="max-w-5xl mx-auto px-20 relative h-72">
+      <!-- CANVAS MATRIX - TAMANHO ORIGINAL -->
+      <canvas id="matrix-overlay" class="absolute inset-0 w-full h-72 rounded-2xl"></canvas>
+      
+      <!-- IMAGEM - REDUZIDA EM 50% E CENTRALIZADA -->
+      <div class="absolute inset-0 flex items-center justify-center z-10">
+        <img 
+          src="https://i.postimg.cc/PJDgnvZJ/Chat-GPT-Image-17-de-mar-de-2026-08-40-00.png"
+          alt="Focus.inf Banner"
+          class="matrix-image w-1/2 h-1/2 object-cover rounded-2xl shadow-lg"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTEÚDO -->
+  <div class="max-w-4xl mx-auto px-6 pb-16">
+    <h1 class="text-4xl font-bold text-white mb-4">
+      Política de <span class="gradient-text">Privacidade</span>
+    </h1>
+    <p class="text-slate-400 mb-10">
+      Última atualização: 2026
+    </p>
+    <div class="space-y-10 leading-relaxed">
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">01.</span> Coleta de Dados</h2>
+        <p>Coletamos informações que você nos fornece diretamente, como nome, e-mail, dados de pagamento e preferências de perfil.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">02.</span> Uso de Informações</h2>
+        <p>Utilizamos suas informações para fornecer e melhorar nossos serviços, processar transações e enviar comunicações relacionadas à sua conta.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">03.</span> Proteção de Dados</h2>
+        <p>Implementamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado, alteração ou destruição.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">04.</span> Compartilhamento de Dados</h2>
+        <p>Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">05.</span> Cookies e Rastreamento</h2>
+        <p>Utilizamos cookies para melhorar sua experiência no site. Você pode desativar cookies em seu navegador a qualquer momento.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">06.</span> Seus Direitos</h2>
+        <p>Você tem o direito de acessar, corrigir ou deletar seus dados pessoais. Para exercer esses direitos, entre em contato conosco.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">07.</span> Retenção de Dados</h2>
+        <p>Mantemos seus dados pessoais apenas pelo tempo necessário para cumprir os objetivos para os quais foram coletados.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">08.</span> Alterações na Política</h2>
+        <p>Reservamos o direito de modificar esta Política de Privacidade a qualquer momento. Alterações significativas serão comunicadas aos usuários.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">09.</span> Conformidade com LGPD</h2>
+        <p>A Focus.inf está em conformidade com a Lei Geral de Proteção de Dados (LGPD) do Brasil e respeita todos os direitos dos titulares de dados.</p>
+      </section>
+      <section>
+        <h2 class="text-2xl font-bold text-blue-600 mb-4"><span class="text-blue-600">10.</span> Contato</h2>
+        <p>Para dúvidas sobre esta Política de Privacidade, entre em contato conosco em: <a href="mailto:focus.inf31@gmail.com" class="text-blue-400">
+      contato@focus.inf
+    </a>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Matrix Effect para o Canvas
+    const canvas = document.getElementById('matrix-overlay');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      
+      function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+      
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      
+      const chars = '01ΔΣЖアβΨλΩカЖΞΦБツØΛΞΨЖΩβΔΣΦカサタナツアイウエオ';
+      const fontSize = 14;
+      let columns = Math.floor(canvas.width / fontSize);
+      const drops = Array(columns).fill(1);
+      
+      function drawMatrix() {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#3b82f6';
+        ctx.font = fontSize + 'px monospace';
+        
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+          
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+      
+      setInterval(drawMatrix, 50);
+    }
+  </script>
+</body>
+</html>
