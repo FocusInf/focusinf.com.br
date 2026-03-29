@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+
 <head>
     <meta charset="UTF-8">    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,17 +108,109 @@
             font-family: 'JetBrains Mono', monospace;
             color: #06b6d4;
         }
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+        @keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
 
-.animate-shimmer {
-  animation: shimmer 4s linear infinite;
+       .animate-shimmer {
+            animation: shimmer 3s linear infinite;
+        }
+
+        /* 🔥 BARRA DE REDES SOCIAIS */
+        .social-sidebar-bubbles {
+          position: fixed;
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          z-index: 1000;
+        }
+
+        .social-sidebar-bubbles a {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 50px;
+          height: 50px;
+          background: #fff;
+          border-radius: 50%;
+          box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+          margin-left: -40px;
+          transition: transform 0.3s;
+        }
+
+        .social-sidebar-bubbles a:hover {
+          transform: translateX(40px) scale(1.1);
+        }
+
+ .social-sidebar-bubbles img {
+  width: 24px;
 }
-    </style>
+/* 🔥 MOBILE AJUSTE */
+@media (max-width: 1024px) {
+  .social-sidebar-bubbles {
+    top: auto;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+
+  .social-sidebar-bubbles a {
+    margin-left: 0;
+  }
+
+  .social-sidebar-bubbles a:active {
+    transform: scale(0.9);
+  }
+}
+
+/* 🎨 CORES DAS REDES */
+
+.social-sidebar-bubbles a.github:hover {
+  background: #000;
+}
+
+.social-sidebar-bubbles a.instagram:hover {
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+}
+
+.social-sidebar-bubbles a.facebook:hover {
+  background: #1877f2;
+}
+
+.social-sidebar-bubbles a.youtube:hover {
+  background: #ff0000;
+}
+
+.social-sidebar-bubbles a.linkedin:hover {
+  background: #0a66c2;
+}
+
+.social-sidebar-bubbles a.discord:hover {
+  background: #5865f2;
+}
+
+.social-sidebar-bubbles a.tiktok:hover {
+  background: #000;
+}
+.social-sidebar-bubbles a.tiktok:hover {
+  background: linear-gradient(45deg, #000000, #25f4ee, #fe2c55);
+}
+.social-sidebar-bubbles a:hover img {
+  filter: brightness(0) invert(1);
+}
+</style>
 
 </head>
+
 <body class="antialiased">
 
     <!-- Navigation -->
@@ -791,5 +883,35 @@
             });
         });
     </script>
+<!-- 🔥 BARRA DE REDES SOCIAIS FIXA LATERAL -->
+<div class="social-sidebar-bubbles">
+  <a href="https://github.com/FocusInf" class="github" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+  </a>
+
+  <a href="https://www.instagram.com/focus_inf/" class="instagram" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
+  </a>
+
+  <a href="https://www.facebook.com/profile.php?id=61579898740918" class="facebook" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook">
+  </a>
+
+  <a href="https://www.youtube.com/@Focus_Inf" class="youtube" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
+  </a>
+
+  <a href="https://www.linkedin.com/in/focus-inf-6b1448386/" class="linkedin" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+  </a>
+
+  <a href="https://discord.com/channels/focus.inf_16382" class="discord" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg" alt="Discord">
+  </a>
+
+  <a href="https://www.tiktok.com/@focus.inf.sibersecurity" class="tiktok" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+  </a>
+</div>
 </body>
 </html>
