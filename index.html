@@ -121,39 +121,61 @@
             animation: shimmer 3s linear infinite;
         }
 
-        /* 🔥 BARRA DE REDES SOCIAIS */
-        .social-sidebar-bubbles {
-          position: fixed;
-          top: 50%;
-          left: 0;
-          transform: translateY(-50%);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          z-index: 1000;
-        }
-
-        .social-sidebar-bubbles a {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 50px;
-          height: 50px;
-          background: #fff;
-          border-radius: 50%;
-          box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-          margin-left: -40px;
-          transition: transform 0.3s;
-        }
-
-        .social-sidebar-bubbles a:hover {
-          transform: translateX(40px) scale(1.1);
-        }
-
- .social-sidebar-bubbles img {
-  width: 24px;
+/* ===============================
+   🔹 SOCIAL SIDEBAR BUBBLES
+   =============================== */
+.social-sidebar-bubbles {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
 }
-/* 🔥 MOBILE AJUSTE */
+
+/* Botões individuais */
+.social-sidebar-bubbles a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+  margin-left: -40px; /* parcialmente escondido */
+  transition: transform 0.3s, background 0.3s;
+}
+
+/* Hover desktop: desliza para dentro e aumenta levemente */
+.social-sidebar-bubbles a:hover {
+  transform: translateX(40px) scale(1.1);
+}
+
+/* Ícones dentro do botão */
+.social-sidebar-bubbles img {
+  width: 24px;
+  transition: filter 0.3s;
+}
+
+.social-sidebar-bubbles a:hover img {
+  filter: brightness(0) invert(1);
+}
+
+/* Cores por rede social */
+.social-sidebar-bubbles a.github:hover { background: #000; }
+.social-sidebar-bubbles a.instagram:hover { background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4); }
+.social-sidebar-bubbles a.facebook:hover { background: #1877f2; }
+.social-sidebar-bubbles a.youtube:hover { background: #ff0000; }
+.social-sidebar-bubbles a.linkedin:hover { background: #0a66c2; }
+.social-sidebar-bubbles a.discord:hover { background: #5865f2; }
+.social-sidebar-bubbles a.tiktok:hover { background: linear-gradient(45deg, #000000, #25f4ee, #fe2c55); }
+
+/* ===============================
+   🔹 RESPONSIVO MOBILE
+   =============================== */
 @media (max-width: 768px) {
   .social-sidebar-bubbles {
     top: auto;
@@ -164,9 +186,10 @@
   }
 
   .social-sidebar-bubbles a {
-    margin-left: 0;
+    margin-left: 0; /* remove deslocamento lateral */
   }
 
+  /* Efeito de toque */
   .social-sidebar-bubbles a:active {
     transform: scale(0.9);
   }
