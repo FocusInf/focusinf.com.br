@@ -4,24 +4,18 @@ export default async function handler(req, res) {
     try {
         const sql = neon(process.env.DATABASE_URL);
 
-        const perguntas = await sql`
-            SELECT *
-            FROM perguntas
-            ORDER BY id
+        const resultado = await sql`
+            SELECT current_database() AS banco, current_schema() AS schema
         `;
 
         return res.status(200).json({
             sucesso: true,
-            banco: "Neon conectado",
-            perguntas: perguntas
+            conexao: resultado
         });
 
     } catch (erro) {
-        console.error(erro);
-
         return res.status(500).json({
             sucesso: false,
-            mensagem: "Erro ao buscar perguntas",
             erro: erro.message
         });
     }
