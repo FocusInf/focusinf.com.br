@@ -1,105 +1,489 @@
-import { neon } from "@neondatabase/serverless";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📖 Desafio Bíblico</title>
 
-export default async function handler(req, res) {
-    try {
-        const sql = neon(process.env.DATABASE_URL);
+<style>
+*{box-sizing:border-box}
 
-        /*
-         * BUSCAR STATUS DO JOGO
-         */
-        if (req.method === "GET") {
-
-            const jogo = await sql`
-                SELECT *
-                FROM jogo
-                ORDER BY id DESC
-                LIMIT 1
-            `;
-
-            if (jogo.length === 0) {
-
-                return res.status(200).json({
-                    sucesso: true,
-                    jogo: {
-                        iniciado: false,
-                        pergunta_ativa: false,
-                        encerrado: false
-                    }
-                });
-
-            }
-
-            const estado = jogo[0];
-
-            let pergunta = null;
-
-            if (estado.pergunta_id) {
-
-                const resultado = await sql`
-                    SELECT
-                        id,
-                        pergunta,
-                        alternativa_a,
-                        alternativa_b,
-                        alternativa_c,
-                        alternativa_d,
-                        dificuldade,
-                        referencia,
-                        versiculo
-                    FROM perguntas
-                    WHERE id = ${estado.pergunta_id}
-                    LIMIT 1
-                `;
-
-                if (resultado.length > 0) {
-
-                    const p = resultado[0];
-
-                    let pontos = 10;
-
-                    if (p.dificuldade === "facil") {
-                        pontos = 10;
-                    } else if (p.dificuldade === "medio") {
-                        pontos = 20;
-                    } else if (p.dificuldade === "dificil") {
-                        pontos = 30;
-                    } else if (p.dificuldade === "desafio") {
-                        pontos = 40;
-                    }
-
-                    pergunta = {
-                        ...p,
-                        pontos
-                    };
-                }
-            }
-
-            return res.status(200).json({
-                sucesso: true,
-                jogo: {
-                    ...estado,
-                    pergunta
-                }
-            });
-        }
-
-
-        /*
-         * MÉTODO NÃO PERMITIDO
-         */
-
-        return res.status(405).json({
-            sucesso: false,
-            erro: "Método não permitido"
-        });
-
-    } catch (erro) {
-
-        console.error(erro);
-
-        return res.status(500).json({
-            sucesso: false,
-            erro: erro.message
-        });
-    }
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:linear-gradient(135deg,#111827,#1e3a8a);
+color:#111827;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px
 }
+
+.container{
+width:100%;
+max-width:700px;
+background:white;
+border-radius:20px;
+padding:30px;
+box-shadow:0 15px 40px #0006
+}
+
+h1{
+text-align:center;
+color:#1e3a8a
+}
+
+.tela{display:none}
+.tela.ativa{display:block}
+
+input{
+width:100%;
+padding:15px;
+font-size:18px;
+border:2px solid #ddd;
+border-radius:10px;
+margin:15px 0
+}
+
+button{
+width:100%;
+padding:15px;
+border:0;
+border-radius:10px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+background:#1e3a8a;
+color:white;
+margin:5px 0
+}
+
+button:disabled{
+opacity:.5;
+cursor:not-allowed
+}
+
+.pergunta{
+font-size:25px;
+font-weight:bold;
+text-align:center;
+margin:25px 0
+}
+
+.pontos{
+text-align:center;
+font-size:22px;
+font-weight:bold;
+color:#b45309
+}
+
+.cronometro{
+text-align:center;
+font-size:48px;
+font-weight:bold;
+color:#dc2626;
+margin:15px
+}
+
+.alternativa{
+background:#f3f4f6;
+color:#111827;
+border:2px solid #ddd
+}
+
+.alternativa:hover{
+background:#dbeafe
+}
+
+.mensagem{
+text-align:center;
+font-size:19px;
+margin:20px 0
+}
+
+.versiculo{
+background:#f3f4f6;
+padding:15px;
+border-radius:10px;
+margin-top:20px
+}
+
+.info{
+text-align:center;
+font-size:16px;
+color:#555
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📖 Desafio Bíblico</h1>
+
+<div id="cadastro" class="tela ativa">
+
+<h2>Digite seu nome</h2>
+
+<input id="nome" maxlength="100" placeholder="Seu nome">
+
+<button onclick="entrar()">🎮 Entrar no jogo</button>
+
+<div id="mensagem" class="mensagem"></div>
+
+</div>
+
+
+<div id="aguardando" class="tela">
+
+<h2>⏳ Aguardando</h2>
+
+<p class="mensagem">
+Você está inscrito no Desafio Bíblico.
+</p>
+
+<p class="mensagem">
+Aguarde o administrador liberar a próxima pergunta.
+</p>
+
+</div>
+
+
+<div id="pergunta" class="tela">
+
+<div class="pontos" id="pontos"></div>
+
+<div class="cronometro" id="tempo">60</div>
+
+<div class="pergunta" id="texto"></div>
+
+<button class="alternativa" id="A" onclick="responder('A')"></button>
+<button class="alternativa" id="B" onclick="responder('B')"></button>
+<button class="alternativa" id="C" onclick="responder('C')"></button>
+<button class="alternativa" id="D" onclick="responder('D')"></button>
+
+<div id="resultado" class="mensagem"></div>
+
+</div>
+
+
+<div id="final" class="tela">
+
+<h2>🏆 Partida encerrada!</h2>
+
+<p class="mensagem">
+Obrigado por participar!
+</p>
+
+<button onclick="mostrarRanking()">
+🏆 Ver ranking
+</button>
+
+<div id="ranking"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let jogadorId=null;
+let perguntaId=null;
+let perguntaNumero=0;
+let respondida=false;
+let ultimaPergunta=null;
+let timer=null;
+let fimDaPergunta=0;
+
+
+function tela(nome){
+
+document.querySelectorAll(".tela")
+.forEach(x=>x.classList.remove("ativa"));
+
+document.getElementById(nome)
+.classList.add("ativa");
+
+}
+
+
+async function entrar(){
+
+const nome=document.getElementById("nome").value.trim();
+
+if(!nome){
+
+document.getElementById("mensagem").innerText=
+"Digite seu nome.";
+
+return;
+}
+
+try{
+
+const r=await fetch("/api/jogadores",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({nome})
+});
+
+const d=await r.json();
+
+if(!d.sucesso){
+
+document.getElementById("mensagem").innerText=
+d.erro;
+
+return;
+}
+
+jogadorId=d.jogador.id;
+
+tela("aguardando");
+
+verificar();
+
+}catch(e){
+
+document.getElementById("mensagem").innerText=
+"Erro de conexão.";
+
+}
+
+}
+
+
+async function verificar(){
+
+if(!jogadorId)return;
+
+try{
+
+const r=await fetch("/api/jogo");
+const d=await r.json();
+
+if(!d.sucesso)return;
+
+if(d.jogo.encerrado){
+
+clearInterval(timer);
+
+tela("final");
+
+return;
+}
+
+if(
+d.jogo.pergunta_ativa &&
+d.jogo.pergunta
+){
+
+if(
+ultimaPergunta !== d.jogo.pergunta.id
+){
+
+carregar(d.jogo);
+
+}
+
+}else{
+
+tela("aguardando");
+
+}
+
+}catch(e){
+
+console.error(e);
+
+}
+
+setTimeout(verificar,1000);
+
+}
+
+
+function carregar(jogo){
+
+ultimaPergunta=jogo.pergunta.id;
+perguntaId=jogo.pergunta.id;
+perguntaNumero=jogo.numero_pergunta;
+
+respondida=false;
+
+document.getElementById("texto").innerText=
+jogo.pergunta.pergunta;
+
+document.getElementById("A").innerText=
+"A) "+jogo.pergunta.alternativa_a;
+
+document.getElementById("B").innerText=
+"B) "+jogo.pergunta.alternativa_b;
+
+document.getElementById("C").innerText=
+"C) "+jogo.pergunta.alternativa_c;
+
+document.getElementById("D").innerText=
+"D) "+jogo.pergunta.alternativa_d;
+
+document.getElementById("pontos").innerText=
+"💰 "+jogo.pergunta.pontos+" pontos";
+
+document.getElementById("resultado").innerText="";
+
+ativar();
+
+tela("pergunta");
+
+iniciarCronometro(jogo.tempo_inicio);
+
+}
+
+
+function iniciarCronometro(inicio){
+
+clearInterval(timer);
+
+const inicioData=new Date(inicio).getTime();
+
+fimDaPergunta=inicioData+60000;
+
+function atualizar(){
+
+const restante=
+Math.max(
+0,
+Math.ceil((fimDaPergunta-Date.now())/1000)
+);
+
+document.getElementById("tempo").innerText=
+restante;
+
+if(restante<=0){
+
+clearInterval(timer);
+
+bloquear();
+
+document.getElementById("resultado").innerText=
+"⏰ Tempo encerrado.";
+
+}
+
+}
+
+atualizar();
+
+timer=setInterval(atualizar,250);
+
+}
+
+
+async function responder(alternativa){
+
+if(respondida)return;
+
+respondida=true;
+
+bloquear();
+
+clearInterval(timer);
+
+try{
+
+const r=await fetch("/api/responder",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+jogador_id:jogadorId,
+pergunta_id:perguntaId,
+resposta:alternativa
+
+})
+
+});
+
+const d=await r.json();
+
+if(d.sucesso){
+
+if(d.correta){
+
+document.getElementById("resultado").innerText=
+"✅ Correta! +"+d.pontos+" pontos";
+
+}else{
+
+document.getElementById("resultado").innerText=
+"❌ Resposta incorreta.";
+
+}
+
+}else{
+
+document.getElementById("resultado").innerText=
+d.erro;
+
+}
+
+}catch(e){
+
+document.getElementById("resultado").innerText=
+"Erro de conexão.";
+
+}
+
+}
+
+
+function bloquear(){
+
+["A","B","C","D"].forEach(x=>{
+document.getElementById(x).disabled=true;
+});
+
+}
+
+
+function ativar(){
+
+["A","B","C","D"].forEach(x=>{
+document.getElementById(x).disabled=false;
+});
+
+}
+
+
+async function mostrarRanking(){
+
+const r=await fetch("/api/ranking");
+const d=await r.json();
+
+if(!d.sucesso)return;
+
+document.getElementById("ranking").innerHTML=
+d.ranking.map((j,i)=>`
+<p>
+<b>${i+1}º</b> -
+${j.nome} -
+<b>${j.pontuacao} pontos</b>
+</p>
+`).join("");
+
+}
+
+</script>
+
+</body>
+</html>
