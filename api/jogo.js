@@ -4,24 +4,25 @@ export default async function handler(req, res) {
     try {
         const sql = neon(process.env.DATABASE_URL);
 
-        const banco = await sql`
+        const perguntas = await sql`
             SELECT
-                current_database() AS banco,
-                current_schema() AS schema,
-                current_user AS usuario
-        `;
-
-        const tabelas = await sql`
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            ORDER BY table_name
+                id,
+                pergunta,
+                alternativa_a,
+                alternativa_b,
+                alternativa_c,
+                alternativa_d,
+                resposta_correta,
+                dificuldade,
+                referencia,
+                versiculo
+            FROM perguntas
+            ORDER BY id
         `;
 
         return res.status(200).json({
             sucesso: true,
-            conexao: banco,
-            tabelas: tabelas
+            perguntas: perguntas
         });
 
     } catch (erro) {
