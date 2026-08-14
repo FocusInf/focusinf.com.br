@@ -4,15 +4,17 @@ export default async function handler(req, res) {
     try {
         const sql = neon(process.env.DATABASE_URL);
 
-        const banco = await sql`
+        const info = await sql`
             SELECT
                 current_database() AS banco,
                 current_schema() AS schema,
-                current_user AS usuario
+                current_user AS usuario,
+                inet_server_addr() AS servidor,
+                inet_server_port() AS porta
         `;
 
         const tabelas = await sql`
-            SELECT table_name
+            SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_schema = 'public'
             ORDER BY table_name
@@ -20,7 +22,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             sucesso: true,
-            conexao: banco,
+            conexao: info,
             tabelas: tabelas
         });
 
