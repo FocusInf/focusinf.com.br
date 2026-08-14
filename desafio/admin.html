@@ -1,18 +1,480 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador - Desafio Bíblico</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>📖 Desafio Bíblico - Administrador</title>
+
+<style>
+
+*{
+box-sizing:border-box
+}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:linear-gradient(135deg,#111827,#1e3a8a);
+color:#111827;
+min-height:100vh;
+padding:20px
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 15px 40px #0006
+}
+
+h1{
+text-align:center;
+color:#1e3a8a
+}
+
+.painel{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px
+}
+
+.card{
+background:#f3f4f6;
+padding:20px;
+border-radius:15px
+}
+
+button{
+width:100%;
+padding:15px;
+margin:5px 0;
+border:0;
+border-radius:10px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+background:#1e3a8a;
+color:white
+}
+
+button.encerrar{
+background:#b91c1c
+}
+
+.pergunta{
+font-size:24px;
+font-weight:bold;
+margin:20px 0
+}
+
+.pontos{
+font-size:22px;
+font-weight:bold;
+color:#b45309
+}
+
+.timer{
+font-size:45px;
+font-weight:bold;
+color:#dc2626;
+text-align:center
+}
+
+.ranking p{
+padding:10px;
+margin:5px 0;
+background:white;
+border-radius:8px
+}
+
+.status{
+font-size:18px;
+font-weight:bold;
+margin:10px 0
+}
+
+@media(max-width:700px){
+
+.painel{
+grid-template-columns:1fr
+}
+
+}
+
+</style>
+
 </head>
 
 <body>
 
-    <h1>📖 Desafio Bíblico</h1>
+<div class="container">
 
-    <h2>👑 Administrador</h2>
+<h1>👨‍💼 Painel do Administrador</h1>
 
-    <p>Área administrativa do jogo.</p>
+<div class="painel">
+
+<div class="card">
+
+<h2>🎮 Controle da partida</h2>
+
+<button onclick="iniciar()">
+▶️ Iniciar partida
+</button>
+
+<button onclick="proxima()">
+➡️ Liberar próxima pergunta
+</button>
+
+<button onclick="encerrarPergunta()">
+⏹️ Encerrar pergunta
+</button>
+
+<button class="encerrar" onclick="encerrar()">
+🛑 Encerrar partida
+</button>
+
+<div id="status" class="status"></div>
+
+</div>
+
+
+<div class="card">
+
+<h2>👥 Jogadores</h2>
+
+<div id="jogadores">
+Carregando...
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card" style="margin-top:20px">
+
+<h2>📖 Pergunta atual</h2>
+
+<div class="pontos" id="pontos"></div>
+
+<div class="timer" id="tempo">--</div>
+
+<div class="pergunta" id="texto">
+Nenhuma pergunta liberada.
+</div>
+
+<div id="numero"></div>
+
+</div>
+
+
+<div class="card" style="margin-top:20px">
+
+<h2>🏆 Ranking</h2>
+
+<div class="ranking" id="ranking">
+Carregando...
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+
+let timer=null;
+let perguntaAtual=null;
+
+
+async function iniciar(){
+
+const r=await fetch("/api/jogo",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+acao:"iniciar"
+})
+
+});
+
+const d=await r.json();
+
+alert(
+d.sucesso ?
+"Partida iniciada!" :
+d.erro
+);
+
+atualizar();
+
+}
+
+
+async function proxima(){
+
+const r=await fetch("/api/jogo",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+acao:"proxima"
+})
+
+});
+
+const d=await r.json();
+
+if(!d.sucesso){
+
+alert(d.erro);
+
+return;
+}
+
+if(d.finalizado){
+
+alert(
+"Não existem mais perguntas disponíveis."
+);
+
+return;
+}
+
+atualizar();
+
+}
+
+
+async function encerrarPergunta(){
+
+await fetch("/api/jogo",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+acao:"encerrar_pergunta"
+})
+
+});
+
+atualizar();
+
+}
+
+
+async function encerrar(){
+
+if(
+!confirm(
+"Tem certeza que deseja encerrar a partida?"
+)
+)return;
+
+await fetch("/api/jogo",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+acao:"encerrar"
+})
+
+});
+
+atualizar();
+
+}
+
+
+async function atualizar(){
+
+try{
+
+const r=await fetch("/api/jogo");
+const d=await r.json();
+
+if(!d.sucesso)return;
+
+const j=d.jogo;
+
+document.getElementById("status").innerText=
+
+j.encerrado
+?
+"🛑 Partida encerrada"
+
+:
+j.pergunta_ativa
+?
+"🟢 Pergunta ativa"
+:
+j.iniciado
+?
+"🟡 Aguardando próxima pergunta"
+:
+"⚪ Partida parada";
+
+
+if(j.pergunta){
+
+document.getElementById("texto").innerText=
+j.pergunta.pergunta;
+
+document.getElementById("pontos").innerText=
+"💰 "+j.pergunta.pontos+" pontos";
+
+document.getElementById("numero").innerText=
+"Pergunta nº "+j.numero_pergunta;
+
+perguntaAtual=j;
+
+iniciarTimer(j.tempo_inicio);
+
+}else{
+
+document.getElementById("texto").innerText=
+"Nenhuma pergunta liberada.";
+
+document.getElementById("pontos").innerText="";
+
+document.getElementById("numero").innerText="";
+
+document.getElementById("tempo").innerText="--";
+
+}
+
+}catch(e){
+
+console.error(e);
+
+}
+
+}
+
+
+function iniciarTimer(inicio){
+
+clearInterval(timer);
+
+if(!inicio){
+
+document.getElementById("tempo").innerText="--";
+
+return;
+}
+
+const fim=
+new Date(inicio).getTime()+60000;
+
+function atualizarTimer(){
+
+const restante=Math.max(
+0,
+Math.ceil((fim-Date.now())/1000)
+);
+
+document.getElementById("tempo").innerText=
+restante;
+
+if(restante<=0){
+
+clearInterval(timer);
+
+}
+
+}
+
+atualizarTimer();
+
+timer=setInterval(atualizarTimer,250);
+
+}
+
+
+async function jogadores(){
+
+const r=await fetch("/api/jogadores");
+const d=await r.json();
+
+if(!d.sucesso)return;
+
+document.getElementById("jogadores").innerHTML=
+d.jogadores.length
+?
+d.jogadores.map(j=>`
+<p>
+👤 ${j.nome}
+<br>
+💰 ${j.pontuacao} pontos
+</p>
+`).join("")
+:
+"Nenhum jogador.";
+
+}
+
+
+async function ranking(){
+
+const r=await fetch("/api/ranking");
+const d=await r.json();
+
+if(!d.sucesso)return;
+
+document.getElementById("ranking").innerHTML=
+d.ranking.length
+?
+d.ranking.map((j,i)=>`
+<p>
+<b>${i+1}º</b>
+${j.nome}
+—
+<b>${j.pontuacao} pontos</b>
+</p>
+`).join("")
+:
+"Nenhum jogador.";
+
+}
+
+
+async function ciclo(){
+
+await atualizar();
+await jogadores();
+await ranking();
+
+}
+
+ciclo();
+
+setInterval(ciclo,2000);
+
+</script>
 
 </body>
+
 </html>
