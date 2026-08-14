@@ -1,25 +1,28 @@
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
 
 export default async function handler(req, res) {
-  try {
-    const resultado = await sql`
-      SELECT NOW() AS data
-    `;
+    try {
+        const sql = neon(process.env.POSTGRES_URL);
 
-    return res.status(200).json({
-      sucesso: true,
-      mensagem: "API do Desafio Bíblico funcionando!",
-      banco: "Neon conectado",
-      data: resultado.rows[0].data
-    });
+        const resultado = await sql`
+            SELECT NOW() AS data
+        `;
 
-  } catch (erro) {
+        return res.status(200).json({
+            sucesso: true,
+            mensagem: "API do Desafio Bíblico funcionando!",
+            banco: "Neon conectado",
+            data: resultado[0].data
+        });
 
-    console.error(erro);
+    } catch (erro) {
 
-    return res.status(500).json({
-      sucesso: false,
-      mensagem: "Erro ao conectar com o banco de dados."
-    });
-  }
+        console.error("ERRO:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro ao conectar com o banco de dados.",
+            erro: erro.message
+        });
+    }
 }
