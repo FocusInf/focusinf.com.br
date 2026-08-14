@@ -4,18 +4,16 @@ export default async function handler(req, res) {
     try {
         const sql = neon(process.env.DATABASE_URL);
 
-        const resultado = await sql`
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            ORDER BY table_name
+        const perguntas = await sql`
+            SELECT *
+            FROM perguntas
+            ORDER BY id
         `;
 
         return res.status(200).json({
             sucesso: true,
-            mensagem: "API do Desafio Bíblico funcionando!",
             banco: "Neon conectado",
-            tabelas: resultado
+            perguntas: perguntas
         });
 
     } catch (erro) {
@@ -23,7 +21,7 @@ export default async function handler(req, res) {
 
         return res.status(500).json({
             sucesso: false,
-            mensagem: "Erro ao conectar ao banco Neon",
+            mensagem: "Erro ao buscar perguntas",
             erro: erro.message
         });
     }
