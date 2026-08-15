@@ -66,6 +66,11 @@ button.encerrar{
 background:#b91c1c
 }
 
+button:disabled{
+opacity:.5;
+cursor:not-allowed
+}
+
 .pergunta{
 font-size:24px;
 font-weight:bold;
@@ -96,6 +101,14 @@ border-radius:8px
 font-size:18px;
 font-weight:bold;
 margin:10px 0
+}
+
+.respostas{
+font-size:18px;
+font-weight:bold;
+text-align:center;
+margin:10px 0;
+color:#1e3a8a
 }
 
 @media(max-width:700px){
@@ -164,6 +177,10 @@ Carregando...
 
 <div class="timer" id="tempo">--</div>
 
+<div class="respostas" id="respostas">
+0 / 0 jogadores responderam
+</div>
+
 <div class="pergunta" id="texto">
 Nenhuma pergunta liberada.
 </div>
@@ -188,290 +205,704 @@ Carregando...
 
 <script>
 
+let timer = null;
 
-let timer=null;
-let perguntaAtual=null;
+let perguntaAtual = null;
 
+let ultimaPerguntaId = null;
+
+
+/* =====================================================
+   INICIAR PARTIDA
+===================================================== */
 
 async function iniciar(){
 
-const r=await fetch("/api/jogo",{
+    try{
 
-method:"POST",
+        const r = await fetch("/api/jogo",{
 
-headers:{
-"Content-Type":"application/json"
-},
+            method:"POST",
 
-body:JSON.stringify({
-acao:"iniciar"
-})
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-});
+            body:JSON.stringify({
+                acao:"iniciar"
+            })
 
-const d=await r.json();
+        });
 
-alert(
-d.sucesso ?
-"Partida iniciada!" :
-d.erro
-);
+        const d = await r.json();
 
-atualizar();
+        if(!d.sucesso){
+
+            alert(d.erro || "Erro ao iniciar.");
+
+            return;
+        }
+
+        alert("Partida iniciada!");
+
+        await atualizar();
+
+    }catch(e){
+
+        console.error(e);
+
+        alert("Erro de conexão.");
+
+    }
 
 }
 
+
+/* =====================================================
+   PRÓXIMA PERGUNTA
+===================================================== */
 
 async function proxima(){
 
-const r=await fetch("/api/jogo",{
+    try{
 
-method:"POST",
+        const r = await fetch("/api/jogo",{
 
-headers:{
-"Content-Type":"application/json"
-},
+            method:"POST",
 
-body:JSON.stringify({
-acao:"proxima"
-})
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-});
+            body:JSON.stringify({
+                acao:"proxima"
+            })
 
-const d=await r.json();
+        });
 
-if(!d.sucesso){
+        const d = await r.json();
 
-alert(d.erro);
+        if(!d.sucesso){
 
-return;
+            alert(d.erro || "Erro.");
+
+            return;
+        }
+
+        if(d.finalizado){
+
+            alert(
+                "Não existem mais perguntas disponíveis."
+            );
+
+            await atualizar();
+
+            return;
+        }
+
+        await atualizar();
+
+    }catch(e){
+
+        console.error(e);
+
+        alert("Erro de conexão.");
+
+    }
+
 }
 
-if(d.finalizado){
 
-alert(
-"Não existem mais perguntas disponíveis."
-);
-
-return;
-}
-
-atualizar();
-
-}
-
+/* =====================================================
+   ENCERRAR PERGUNTA
+===================================================== */
 
 async function encerrarPergunta(){
 
-await fetch("/api/jogo",{
+    try{
 
-method:"POST",
+        const r = await fetch("/api/jogo",{
 
-headers:{
-"Content-Type":"application/json"
-},
+            method:"POST",
 
-body:JSON.stringify({
-acao:"encerrar_pergunta"
-})
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-});
+            body:JSON.stringify({
+                acao:"encerrar_pergunta"
+            })
 
-atualizar();
+        });
+
+        const d = await r.json();
+
+        if(!d.sucesso){
+
+            alert(
+                d.erro ||
+                "Não foi possível encerrar a pergunta."
+            );
+
+            return;
+        }
+
+        /*
+         * Para imediatamente o cronômetro
+         * do administrador.
+         */
+
+        clearInterval(timer);
+
+        document.getElementById("tempo").innerText = "0";
+
+        document.getElementById("status").innerText =
+            "🟡 Pergunta encerrada — ranking liberado";
+
+        await atualizar();
+
+    }catch(e){
+
+        console.error(e);
+
+        alert("Erro de conexão.");
+
+    }
 
 }
 
+
+/* =====================================================
+   ENCERRAR PARTIDA
+===================================================== */
 
 async function encerrar(){
 
-if(
-!confirm(
-"Tem certeza que deseja encerrar a partida?"
-)
-)return;
+    if(
+        !confirm(
+            "Tem certeza que deseja encerrar a partida?\n\n" +
+            "Isso irá apagar os jogadores, respostas e pontuações."
+        )
+    ){
 
-await fetch("/api/jogo",{
+        return;
+    }
 
-method:"POST",
 
-headers:{
-"Content-Type":"application/json"
-},
+    try{
 
-body:JSON.stringify({
-acao:"encerrar"
-})
+        const r = await fetch("/api/jogo",{
 
-});
+            method:"POST",
 
-atualizar();
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                acao:"encerrar"
+            })
+
+        });
+
+        const d = await r.json();
+
+        if(!d.sucesso){
+
+            alert(
+                d.erro ||
+                "Erro ao encerrar partida."
+            );
+
+            return;
+        }
+
+        clearInterval(timer);
+
+        alert(
+            "Partida encerrada e dados limpos."
+        );
+
+        await atualizar();
+
+    }catch(e){
+
+        console.error(e);
+
+        alert("Erro de conexão.");
+
+    }
 
 }
 
+
+/* =====================================================
+   ATUALIZAR ESTADO DO JOGO
+===================================================== */
 
 async function atualizar(){
 
-try{
+    try{
 
-const r=await fetch("/api/jogo");
-const d=await r.json();
+        const r = await fetch(
+            "/api/jogo?_=" + Date.now()
+        );
 
-if(!d.sucesso)return;
+        const d = await r.json();
 
-const j=d.jogo;
+        if(!d.sucesso){
 
-document.getElementById("status").innerText=
+            return;
+        }
 
-j.encerrado
-?
-"🛑 Partida encerrada"
-
-:
-j.pergunta_ativa
-?
-"🟢 Pergunta ativa"
-:
-j.iniciado
-?
-"🟡 Aguardando próxima pergunta"
-:
-"⚪ Partida parada";
+        const j = d.jogo;
 
 
-if(j.pergunta){
+        /* =================================================
+           STATUS
+        ================================================= */
 
-document.getElementById("texto").innerText=
-j.pergunta.pergunta;
+        document.getElementById("status").innerText =
 
-document.getElementById("pontos").innerText=
-"💰 "+j.pergunta.pontos+" pontos";
+            j.encerrado
 
-document.getElementById("numero").innerText=
-"Pergunta nº "+j.numero_pergunta;
+            ?
 
-perguntaAtual=j;
+            "🛑 Partida encerrada"
 
-iniciarTimer(j.tempo_inicio);
+            :
 
-}else{
+            j.pergunta_ativa
 
-document.getElementById("texto").innerText=
-"Nenhuma pergunta liberada.";
+            ?
 
-document.getElementById("pontos").innerText="";
+            "🟢 Pergunta ativa"
 
-document.getElementById("numero").innerText="";
+            :
 
-document.getElementById("tempo").innerText="--";
+            j.iniciado
+
+            ?
+
+            "🟡 Aguardando próxima pergunta"
+
+            :
+
+            "⚪ Partida parada";
+
+
+        /* =================================================
+           PERGUNTA ATIVA
+        ================================================= */
+
+        if(
+            j.pergunta_ativa &&
+            j.pergunta
+        ){
+
+            document.getElementById("texto").innerText =
+                j.pergunta.pergunta;
+
+            document.getElementById("pontos").innerText =
+                "💰 " +
+                j.pergunta.pontos +
+                " pontos";
+
+            document.getElementById("numero").innerText =
+                "Pergunta nº " +
+                j.numero_pergunta;
+
+            perguntaAtual = j;
+
+            ultimaPerguntaId =
+                j.pergunta.id;
+
+            iniciarTimer(j.tempo_inicio);
+
+        }
+
+
+        /* =================================================
+           PERGUNTA ENCERRADA
+        ================================================= */
+
+        else{
+
+            clearInterval(timer);
+
+            document.getElementById("tempo").innerText =
+                j.iniciado && Number(j.numero_pergunta || 0) > 0
+                ?
+                "ENCERRADA"
+                :
+                "--";
+
+            document.getElementById("texto").innerText =
+                "Nenhuma pergunta ativa.";
+
+            document.getElementById("pontos").innerText = "";
+
+            document.getElementById("numero").innerText = "";
+
+            perguntaAtual = null;
+
+        }
+
+
+        /*
+         * Atualiza contagem de respostas
+         */
+
+        await atualizarRespostas();
+
+    }catch(e){
+
+        console.error(e);
+
+    }
 
 }
 
-}catch(e){
 
-console.error(e);
-
-}
-
-}
-
+/* =====================================================
+   CRONÔMETRO
+===================================================== */
 
 function iniciarTimer(inicio){
 
-clearInterval(timer);
+    clearInterval(timer);
 
-if(!inicio){
+    if(!inicio){
 
-document.getElementById("tempo").innerText="--";
+        document.getElementById("tempo").innerText =
+            "--";
 
-return;
+        return;
+    }
+
+
+    const fim =
+        new Date(inicio).getTime() +
+        60000;
+
+
+    function atualizarTimer(){
+
+        const restante =
+            Math.max(
+                0,
+                Math.ceil(
+                    (fim - Date.now()) / 1000
+                )
+            );
+
+
+        document.getElementById("tempo").innerText =
+            restante;
+
+
+        if(restante <= 0){
+
+            clearInterval(timer);
+
+            /*
+             * O cronômetro visual chegou a zero.
+             * A API continuará controlando a validade
+             * da pergunta.
+             */
+
+        }
+
+    }
+
+
+    atualizarTimer();
+
+
+    timer =
+        setInterval(
+            atualizarTimer,
+            250
+        );
+
 }
 
-const fim=
-new Date(inicio).getTime()+60000;
 
-function atualizarTimer(){
+/* =====================================================
+   CONTAR RESPOSTAS
+===================================================== */
 
-const restante=Math.max(
-0,
-Math.ceil((fim-Date.now())/1000)
-);
+async function atualizarRespostas(){
 
-document.getElementById("tempo").innerText=
-restante;
+    try{
 
-if(restante<=0){
+        const r =
+            await fetch(
+                "/api/jogadores"
+            );
 
-clearInterval(timer);
+        const d =
+            await r.json();
+
+        if(!d.sucesso){
+
+            return;
+        }
+
+
+        const jogadores =
+            d.jogadores || [];
+
+
+        /*
+         * A contagem real das respostas é obtida
+         * pelo novo endpoint abaixo.
+         */
+
+        if(
+            !perguntaAtual ||
+            !perguntaAtual.pergunta
+        ){
+
+            document.getElementById(
+                "respostas"
+            ).innerText =
+                jogadores.length +
+                " jogadores";
+
+            return;
+        }
+
+
+        const respostaR =
+            await fetch(
+                "/api/responder?pergunta_id=" +
+                perguntaAtual.pergunta.id
+            );
+
+
+        if(!respostaR.ok){
+
+            document.getElementById(
+                "respostas"
+            ).innerText =
+                "Aguardando respostas...";
+
+            return;
+        }
+
+
+        const respostaD =
+            await respostaR.json();
+
+
+        if(respostaD.totalJogadores !== undefined){
+
+            document.getElementById(
+                "respostas"
+            ).innerText =
+
+                respostaD.totalRespostas +
+                " / " +
+                respostaD.totalJogadores +
+                " jogadores responderam";
+
+
+            /*
+             * TODOS RESPONDERAM
+             */
+
+            if(
+                respostaD.totalJogadores > 0 &&
+                respostaD.totalRespostas >=
+                respostaD.totalJogadores
+            ){
+
+                clearInterval(timer);
+
+                document.getElementById(
+                    "tempo"
+                ).innerText =
+                    "ENCERRADA";
+
+                document.getElementById(
+                    "status"
+                ).innerText =
+                    "🟡 Todos responderam — ranking liberado";
+
+                /*
+                 * Atualiza o estado do jogo
+                 * imediatamente.
+                 */
+
+                setTimeout(
+                    atualizar,
+                    100
+                );
+
+            }
+
+        }
+
+    }catch(e){
+
+        console.error(e);
+
+    }
 
 }
 
-}
 
-atualizarTimer();
-
-timer=setInterval(atualizarTimer,250);
-
-}
-
+/* =====================================================
+   JOGADORES
+===================================================== */
 
 async function jogadores(){
 
-const r=await fetch("/api/jogadores");
-const d=await r.json();
+    try{
 
-if(!d.sucesso)return;
+        const r =
+            await fetch(
+                "/api/jogadores"
+            );
 
-document.getElementById("jogadores").innerHTML=
-d.jogadores.length
-?
-d.jogadores.map(j=>`
-<p>
-👤 ${j.nome}
-<br>
-💰 ${j.pontuacao} pontos
-</p>
-`).join("")
-:
-"Nenhum jogador.";
+        const d =
+            await r.json();
+
+        if(!d.sucesso){
+
+            return;
+        }
+
+
+        document.getElementById(
+            "jogadores"
+        ).innerHTML =
+
+            d.jogadores.length
+
+            ?
+
+            d.jogadores
+            .map(j=>`
+
+                <p>
+
+                    👤 ${j.nome}
+
+                    <br>
+
+                    💰 ${j.pontuacao} pontos
+
+                </p>
+
+            `)
+            .join("")
+
+            :
+
+            "Nenhum jogador.";
+
+    }catch(e){
+
+        console.error(e);
+
+    }
 
 }
 
+
+/* =====================================================
+   RANKING
+===================================================== */
 
 async function ranking(){
 
-const r=await fetch("/api/ranking");
-const d=await r.json();
+    try{
 
-if(!d.sucesso)return;
+        const r =
+            await fetch(
+                "/api/ranking"
+            );
 
-document.getElementById("ranking").innerHTML=
-d.ranking.length
-?
-d.ranking.map((j,i)=>`
-<p>
-<b>${i+1}º</b>
-${j.nome}
-—
-<b>${j.pontuacao} pontos</b>
-</p>
-`).join("")
-:
-"Nenhum jogador.";
+        const d =
+            await r.json();
+
+        if(!d.sucesso){
+
+            return;
+        }
+
+
+        document.getElementById(
+            "ranking"
+        ).innerHTML =
+
+            d.ranking.length
+
+            ?
+
+            d.ranking
+            .map((j,i)=>`
+
+                <p>
+
+                    <b>
+                        ${i+1}º
+                    </b>
+
+                    ${j.nome}
+
+                    —
+
+                    <b>
+                        ${j.pontuacao}
+                        pontos
+                    </b>
+
+                </p>
+
+            `)
+            .join("")
+
+            :
+
+            "Nenhum jogador.";
+
+    }catch(e){
+
+        console.error(e);
+
+    }
 
 }
 
+
+/* =====================================================
+   CICLO
+===================================================== */
 
 async function ciclo(){
 
-await atualizar();
-await jogadores();
-await ranking();
+    await atualizar();
+
+    await jogadores();
+
+    await ranking();
 
 }
 
+
+/*
+ * Atualiza a tela a cada 1 segundo.
+ */
+
 ciclo();
 
-setInterval(ciclo,2000);
+setInterval(
+    ciclo,
+    1000
+);
 
 </script>
 
