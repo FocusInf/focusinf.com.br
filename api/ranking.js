@@ -12,11 +12,15 @@ export default async function handler(req, res) {
                 nome,
                 pontuacao
             FROM jogadores
-            ORDER BY pontuacao DESC, nome ASC
+            ORDER BY
+                pontuacao DESC,
+                nome ASC
         `;
 
         return res.status(200).json({
+
             sucesso: true,
+
             ranking
         });
 
@@ -25,7 +29,9 @@ export default async function handler(req, res) {
         console.error(erro);
 
         return res.status(500).json({
+
             sucesso: false,
+
             erro: erro.message
         });
     }
