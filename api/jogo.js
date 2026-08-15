@@ -26,7 +26,9 @@ export default async function handler(req, res) {
                     jogo: {
                         iniciado: false,
                         pergunta_ativa: false,
-                        encerrado: false
+                        encerrado: false,
+                        numero_pergunta: 0,
+                        pergunta: null
                     }
                 });
             }
@@ -35,7 +37,11 @@ export default async function handler(req, res) {
 
             let pergunta = null;
 
-            if (estado.pergunta_id) {
+            // Só envia a pergunta quando ela estiver ativa
+            if (
+                estado.pergunta_ativa &&
+                estado.pergunta_id
+            ) {
 
                 const resultado = await sql`
                     SELECT
@@ -84,12 +90,17 @@ export default async function handler(req, res) {
 
             return res.status(200).json({
                 sucesso: true,
+
                 jogo: {
                     ...estado,
+
+                    // Quando a pergunta estiver encerrada,
+                    // não envia mais a pergunta para o jogador.
                     pergunta
                 }
             });
         }
+
 
         // =====================================================
         // POST - COMANDOS DO ADMINISTRADOR
@@ -99,18 +110,19 @@ export default async function handler(req, res) {
 
             const { acao } = req.body;
 
+
             // =================================================
             // INICIAR PARTIDA
             // =================================================
 
             if (acao === "iniciar") {
 
-                // Apaga respostas de uma partida anterior
+                // Apaga respostas da partida anterior
                 await sql`
                     DELETE FROM respostas
                 `;
 
-                // Zera a pontuação dos jogadores
+                // Zera pontuação dos jogadores
                 await sql`
                     UPDATE jogadores
                     SET pontuacao = 0
@@ -134,6 +146,7 @@ export default async function handler(req, res) {
                     mensagem: "Partida iniciada."
                 });
             }
+
 
             // =================================================
             // PRÓXIMA PERGUNTA
@@ -167,9 +180,9 @@ export default async function handler(req, res) {
                 const numero =
                     Number(estado[0].numero_pergunta || 0) + 1;
 
+
                 // -------------------------------------------------
-                // Seleciona uma pergunta que ainda não foi usada
-                // nesta partida
+                // Procura uma pergunta ainda não respondida
                 // -------------------------------------------------
 
                 const pergunta = await sql`
@@ -185,6 +198,7 @@ export default async function handler(req, res) {
                     LIMIT 1
                 `;
 
+
                 // -------------------------------------------------
                 // Não existem mais perguntas
                 // -------------------------------------------------
@@ -197,18 +211,21 @@ export default async function handler(req, res) {
                             pergunta_ativa = FALSE,
                             encerrado = TRUE,
                             tempo_inicio = NULL,
-                            tempo_restante = 0
+                            tempo_restante = 0,
+                            pergunta_id = NULL
                     `;
 
                     return res.status(200).json({
                         sucesso: true,
                         finalizado: true,
-                        mensagem: "Todas as perguntas foram utilizadas."
+                        mensagem:
+                            "Todas as perguntas foram utilizadas."
                     });
                 }
 
+
                 // -------------------------------------------------
-                // Ativa a pergunta
+                // Ativa a nova pergunta
                 // -------------------------------------------------
 
                 await sql`
@@ -223,7 +240,11 @@ export default async function handler(req, res) {
                         encerrado = FALSE
                 `;
 
-                // Calcula os pontos
+
+                // -------------------------------------------------
+                // Calcula pontos
+                // -------------------------------------------------
+
                 let pontos = 10;
 
                 if (pergunta[0].dificuldade === "facil") {
@@ -242,15 +263,20 @@ export default async function handler(req, res) {
                     pontos = 40;
                 }
 
+
                 return res.status(200).json({
+
                     sucesso: true,
+
                     pergunta: {
                         ...pergunta[0],
                         pontos
                     },
+
                     numero_pergunta: numero
                 });
             }
+
 
             // =================================================
             // ENCERRAR PERGUNTA
@@ -258,18 +284,39 @@ export default async function handler(req, res) {
 
             if (acao === "encerrar_pergunta") {
 
+                /*
+                 * IMPORTANTE:
+                 *
+                 * Aqui NÃO encerramos a partida.
+                 *
+                 * Apenas encerramos a pergunta atual.
+                 *
+                 * Os jogadores continuam cadastrados.
+                 * A pontuação continua.
+                 * O ranking continua.
+                 */
+
                 await sql`
                     UPDATE jogo
                     SET
                         pergunta_ativa = FALSE,
-                        tempo_restante = 0
+                        tempo_inicio = NULL,
+                        tempo_restante = 0,
+                        pergunta_id = NULL
                 `;
 
+
                 return res.status(200).json({
+
                     sucesso: true,
-                    mensagem: "Pergunta encerrada."
+
+                    encerrada: true,
+
+                    mensagem:
+                        "Pergunta encerrada. Ranking liberado."
                 });
             }
+
 
             // =================================================
             // ENCERRAR PARTIDA
@@ -278,25 +325,25 @@ export default async function handler(req, res) {
             if (acao === "encerrar") {
 
                 // -------------------------------------------------
-                // 1. Apaga todas as respostas
+                // 1. Apaga respostas
                 // -------------------------------------------------
 
                 await sql`
                     DELETE FROM respostas
                 `;
 
+
                 // -------------------------------------------------
-                // 2. Apaga todos os jogadores
-                // -------------------------------------------------
-                // Isso também elimina o ranking da partida
+                // 2. Apaga jogadores
                 // -------------------------------------------------
 
                 await sql`
                     DELETE FROM jogadores
                 `;
 
+
                 // -------------------------------------------------
-                // 3. Reseta o jogo
+                // 3. Finaliza o jogo
                 // -------------------------------------------------
 
                 await sql`
@@ -311,43 +358,50 @@ export default async function handler(req, res) {
                         encerrado = TRUE
                 `;
 
-                // -------------------------------------------------
-                // IMPORTANTE:
-                // A tabela PERGUNTAS NÃO É APAGADA.
-                // -------------------------------------------------
 
                 return res.status(200).json({
+
                     sucesso: true,
+
                     mensagem:
                         "Partida encerrada. Jogadores, respostas e ranking foram limpos."
                 });
             }
+
 
             // =================================================
             // AÇÃO INVÁLIDA
             // =================================================
 
             return res.status(400).json({
+
                 sucesso: false,
+
                 erro: "Ação inválida."
             });
         }
+
 
         // =====================================================
         // MÉTODO NÃO PERMITIDO
         // =====================================================
 
         return res.status(405).json({
+
             sucesso: false,
+
             erro: "Método não permitido."
         });
+
 
     } catch (erro) {
 
         console.error(erro);
 
         return res.status(500).json({
+
             sucesso: false,
+
             erro: erro.message
         });
     }
