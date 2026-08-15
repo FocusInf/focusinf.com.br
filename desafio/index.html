@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -34,8 +35,13 @@ text-align:center;
 color:#1e3a8a
 }
 
-.tela{display:none}
-.tela.ativa{display:block}
+.tela{
+display:none
+}
+
+.tela.ativa{
+display:block
+}
 
 input{
 width:100%;
@@ -102,17 +108,30 @@ font-size:19px;
 margin:20px 0
 }
 
-.versiculo{
-background:#f3f4f6;
-padding:15px;
-border-radius:10px;
+.ranking{
 margin-top:20px
 }
 
-.info{
+.ranking p{
+padding:12px;
+margin:6px 0;
+background:#f3f4f6;
+border-radius:10px;
+font-size:17px
+}
+
+.meu-ranking{
+background:#dbeafe !important;
+border:2px solid #1e3a8a;
+font-weight:bold
+}
+
+.destaque{
 text-align:center;
-font-size:16px;
-color:#555
+font-size:24px;
+font-weight:bold;
+color:#1e3a8a;
+margin:20px 0
 }
 </style>
 </head>
@@ -123,18 +142,33 @@ color:#555
 
 <h1>📖 Desafio Bíblico</h1>
 
+
+<!-- =========================
+     CADASTRO
+========================= -->
+
 <div id="cadastro" class="tela ativa">
 
 <h2>Digite seu nome</h2>
 
-<input id="nome" maxlength="100" placeholder="Seu nome">
+<input
+id="nome"
+maxlength="100"
+placeholder="Seu nome"
+>
 
-<button onclick="entrar()">🎮 Entrar no jogo</button>
+<button onclick="entrar()">
+🎮 Entrar no jogo
+</button>
 
 <div id="mensagem" class="mensagem"></div>
 
 </div>
 
+
+<!-- =========================
+     AGUARDANDO
+========================= -->
 
 <div id="aguardando" class="tela">
 
@@ -151,23 +185,80 @@ Aguarde o administrador liberar a próxima pergunta.
 </div>
 
 
+<!-- =========================
+     PERGUNTA
+========================= -->
+
 <div id="pergunta" class="tela">
 
 <div class="pontos" id="pontos"></div>
 
-<div class="cronometro" id="tempo">60</div>
+<div class="cronometro" id="tempo">
+60
+</div>
 
 <div class="pergunta" id="texto"></div>
 
-<button class="alternativa" id="A" onclick="responder('A')"></button>
-<button class="alternativa" id="B" onclick="responder('B')"></button>
-<button class="alternativa" id="C" onclick="responder('C')"></button>
-<button class="alternativa" id="D" onclick="responder('D')"></button>
+<button
+class="alternativa"
+id="A"
+onclick="responder('A')">
+</button>
+
+<button
+class="alternativa"
+id="B"
+onclick="responder('B')">
+</button>
+
+<button
+class="alternativa"
+id="C"
+onclick="responder('C')">
+</button>
+
+<button
+class="alternativa"
+id="D"
+onclick="responder('D')">
+</button>
 
 <div id="resultado" class="mensagem"></div>
 
 </div>
 
+
+<!-- =========================
+     RANKING ENTRE PERGUNTAS
+========================= -->
+
+<div id="rankingTela" class="tela">
+
+<h2>🏆 Ranking</h2>
+
+<div class="destaque" id="minhaPosicao">
+</div>
+
+<p class="mensagem">
+A pergunta foi encerrada.
+</p>
+
+<p class="mensagem">
+Aguarde o administrador liberar a próxima pergunta.
+</p>
+
+<div
+class="ranking"
+id="rankingLista">
+Carregando ranking...
+</div>
+
+</div>
+
+
+<!-- =========================
+     FINAL
+========================= -->
 
 <div id="final" class="tela">
 
@@ -177,11 +268,15 @@ Aguarde o administrador liberar a próxima pergunta.
 Obrigado por participar!
 </p>
 
-<button onclick="mostrarRanking()">
-🏆 Ver ranking
-</button>
+<div class="destaque">
+Resultado final
+</div>
 
-<div id="ranking"></div>
+<div
+class="ranking"
+id="rankingFinal">
+Carregando ranking...
+</div>
 
 </div>
 
@@ -190,19 +285,29 @@ Obrigado por participar!
 
 <script>
 
-let jogadorId=null;
-let perguntaId=null;
-let perguntaNumero=0;
-let respondida=false;
-let ultimaPergunta=null;
-let timer=null;
-let fimDaPergunta=0;
+let jogadorId = null;
 
+let perguntaId = null;
+
+let perguntaNumero = 0;
+
+let respondida = false;
+
+let ultimaPergunta = null;
+
+let timer = null;
+
+let fimDaPergunta = 0;
+
+
+/* =========================
+   TROCAR TELA
+========================= */
 
 function tela(nome){
 
 document.querySelectorAll(".tela")
-.forEach(x=>x.classList.remove("ativa"));
+.forEach(x => x.classList.remove("ativa"));
 
 document.getElementById(nome)
 .classList.add("ativa");
@@ -210,13 +315,21 @@ document.getElementById(nome)
 }
 
 
+/* =========================
+   ENTRAR
+========================= */
+
 async function entrar(){
 
-const nome=document.getElementById("nome").value.trim();
+const nome =
+document.getElementById("nome")
+.value
+.trim();
 
 if(!nome){
 
-document.getElementById("mensagem").innerText=
+document.getElementById("mensagem")
+.innerText =
 "Digite seu nome.";
 
 return;
@@ -224,25 +337,32 @@ return;
 
 try{
 
-const r=await fetch("/api/jogadores",{
+const r = await fetch(
+"/api/jogadores",
+{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
-body:JSON.stringify({nome})
-});
+body:JSON.stringify({
+nome:nome
+})
+}
+);
 
-const d=await r.json();
+const d = await r.json();
 
 if(!d.sucesso){
 
-document.getElementById("mensagem").innerText=
-d.erro;
+document.getElementById("mensagem")
+.innerText =
+d.erro || "Erro ao entrar.";
 
 return;
 }
 
-jogadorId=d.jogador.id;
+jogadorId =
+d.jogador.id;
 
 tela("aguardando");
 
@@ -250,7 +370,10 @@ verificar();
 
 }catch(e){
 
-document.getElementById("mensagem").innerText=
+console.error(e);
+
+document.getElementById("mensagem")
+.innerText =
 "Erro de conexão.";
 
 }
@@ -258,44 +381,91 @@ document.getElementById("mensagem").innerText=
 }
 
 
+/* =========================
+   VERIFICAR ESTADO DO JOGO
+========================= */
+
 async function verificar(){
 
 if(!jogadorId)return;
 
 try{
 
-const r=await fetch("/api/jogo");
-const d=await r.json();
+const r =
+await fetch("/api/jogo");
+
+const d =
+await r.json();
 
 if(!d.sucesso)return;
 
-if(d.jogo.encerrado){
+const jogo = d.jogo;
+
+
+/*
+   PARTIDA ENCERRADA
+*/
+
+if(jogo.encerrado){
 
 clearInterval(timer);
+
+await carregarRankingFinal();
 
 tela("final");
 
 return;
 }
 
+
+/*
+   PERGUNTA ATIVA
+*/
+
 if(
-d.jogo.pergunta_ativa &&
-d.jogo.pergunta
+jogo.pergunta_ativa &&
+jogo.pergunta
 ){
 
 if(
-ultimaPergunta !== d.jogo.pergunta.id
+ultimaPergunta !== jogo.pergunta.id
 ){
 
-carregar(d.jogo);
+carregar(jogo);
 
 }
 
-}else{
+return;
+}
+
+
+/*
+   PERGUNTA ENCERRADA
+   E JÁ EXISTIU PELO MENOS UMA PERGUNTA
+*/
+
+if(
+jogo.iniciado &&
+!jogo.pergunta_ativa &&
+Number(jogo.numero_pergunta || 0) > 0
+){
+
+clearInterval(timer);
+
+await carregarRanking();
+
+tela("rankingTela");
+
+return;
+}
+
+
+/*
+   PARTIDA INICIADA MAS AINDA
+   NÃO EXISTE PERGUNTA
+*/
 
 tela("aguardando");
-
-}
 
 }catch(e){
 
@@ -308,69 +478,103 @@ setTimeout(verificar,1000);
 }
 
 
+/* =========================
+   CARREGAR PERGUNTA
+========================= */
+
 function carregar(jogo){
 
-ultimaPergunta=jogo.pergunta.id;
-perguntaId=jogo.pergunta.id;
-perguntaNumero=jogo.numero_pergunta;
+ultimaPergunta =
+jogo.pergunta.id;
 
-respondida=false;
+perguntaId =
+jogo.pergunta.id;
 
-document.getElementById("texto").innerText=
+perguntaNumero =
+jogo.numero_pergunta;
+
+respondida = false;
+
+document.getElementById("texto")
+.innerText =
 jogo.pergunta.pergunta;
 
-document.getElementById("A").innerText=
-"A) "+jogo.pergunta.alternativa_a;
+document.getElementById("A")
+.innerText =
+"A) " +
+jogo.pergunta.alternativa_a;
 
-document.getElementById("B").innerText=
-"B) "+jogo.pergunta.alternativa_b;
+document.getElementById("B")
+.innerText =
+"B) " +
+jogo.pergunta.alternativa_b;
 
-document.getElementById("C").innerText=
-"C) "+jogo.pergunta.alternativa_c;
+document.getElementById("C")
+.innerText =
+"C) " +
+jogo.pergunta.alternativa_c;
 
-document.getElementById("D").innerText=
-"D) "+jogo.pergunta.alternativa_d;
+document.getElementById("D")
+.innerText =
+"D) " +
+jogo.pergunta.alternativa_d;
 
-document.getElementById("pontos").innerText=
-"💰 "+jogo.pergunta.pontos+" pontos";
+document.getElementById("pontos")
+.innerText =
+"💰 " +
+jogo.pergunta.pontos +
+" pontos";
 
-document.getElementById("resultado").innerText="";
+document.getElementById("resultado")
+.innerText = "";
 
 ativar();
 
 tela("pergunta");
 
-iniciarCronometro(jogo.tempo_inicio);
+iniciarCronometro(
+jogo.tempo_inicio
+);
 
 }
 
+
+/* =========================
+   CRONÔMETRO
+========================= */
 
 function iniciarCronometro(inicio){
 
 clearInterval(timer);
 
-const inicioData=new Date(inicio).getTime();
+const inicioData =
+new Date(inicio).getTime();
 
-fimDaPergunta=inicioData+60000;
+fimDaPergunta =
+inicioData + 60000;
 
 function atualizar(){
 
-const restante=
+const restante =
 Math.max(
 0,
-Math.ceil((fimDaPergunta-Date.now())/1000)
+Math.ceil(
+(fimDaPergunta-Date.now())/1000
+)
 );
 
-document.getElementById("tempo").innerText=
+document.getElementById("tempo")
+.innerText =
 restante;
 
-if(restante<=0){
+if(restante <= 0){
 
 clearInterval(timer);
 
 bloquear();
 
-document.getElementById("resultado").innerText=
+document.getElementById("resultado")
+.innerText =
 "⏰ Tempo encerrado.";
 
 }
@@ -379,16 +583,24 @@ document.getElementById("resultado").innerText=
 
 atualizar();
 
-timer=setInterval(atualizar,250);
+timer =
+setInterval(
+atualizar,
+250
+);
 
 }
 
+
+/* =========================
+   RESPONDER
+========================= */
 
 async function responder(alternativa){
 
 if(respondida)return;
 
-respondida=true;
+respondida = true;
 
 bloquear();
 
@@ -396,50 +608,62 @@ clearInterval(timer);
 
 try{
 
-const r=await fetch("/api/responder",{
-
+const r =
+await fetch(
+"/api/responder",
+{
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
 
 jogador_id:jogadorId,
+
 pergunta_id:perguntaId,
+
 resposta:alternativa
 
 })
+}
+);
 
-});
-
-const d=await r.json();
+const d =
+await r.json();
 
 if(d.sucesso){
 
 if(d.correta){
 
-document.getElementById("resultado").innerText=
-"✅ Correta! +"+d.pontos+" pontos";
+document.getElementById("resultado")
+.innerText =
+"✅ Correta! +" +
+d.pontos +
+" pontos";
 
 }else{
 
-document.getElementById("resultado").innerText=
+document.getElementById("resultado")
+.innerText =
 "❌ Resposta incorreta.";
 
 }
 
 }else{
 
-document.getElementById("resultado").innerText=
-d.erro;
+document.getElementById("resultado")
+.innerText =
+d.erro ||
+"Erro ao responder.";
 
 }
 
 }catch(e){
 
-document.getElementById("resultado").innerText=
+console.error(e);
+
+document.getElementById("resultado")
+.innerText =
 "Erro de conexão.";
 
 }
@@ -447,39 +671,162 @@ document.getElementById("resultado").innerText=
 }
 
 
+/* =========================
+   BLOQUEAR
+========================= */
+
 function bloquear(){
 
-["A","B","C","D"].forEach(x=>{
-document.getElementById(x).disabled=true;
+["A","B","C","D"]
+.forEach(x => {
+
+document.getElementById(x)
+.disabled = true;
+
 });
 
 }
 
+
+/* =========================
+   ATIVAR
+========================= */
 
 function ativar(){
 
-["A","B","C","D"].forEach(x=>{
-document.getElementById(x).disabled=false;
+["A","B","C","D"]
+.forEach(x => {
+
+document.getElementById(x)
+.disabled = false;
+
 });
 
 }
 
 
-async function mostrarRanking(){
+/* =========================
+   RANKING
+========================= */
 
-const r=await fetch("/api/ranking");
-const d=await r.json();
+async function carregarRanking(){
+
+try{
+
+const r =
+await fetch("/api/ranking");
+
+const d =
+await r.json();
 
 if(!d.sucesso)return;
 
-document.getElementById("ranking").innerHTML=
-d.ranking.map((j,i)=>`
+const ranking =
+d.ranking || [];
+
+const lista =
+document.getElementById(
+"rankingLista"
+);
+
+if(ranking.length === 0){
+
+lista.innerHTML =
+"<p>Nenhum jogador.</p>";
+
+return;
+}
+
+let minhaPosicao = "";
+
+lista.innerHTML =
+ranking.map((j,i)=>{
+
+const souEu =
+Number(j.id) ===
+Number(jogadorId);
+
+if(souEu){
+
+minhaPosicao =
+"🏅 Você está em " +
+(i+1) +
+"º lugar com " +
+j.pontuacao +
+" pontos";
+
+}
+
+return `
+<p class="${souEu ? "meu-ranking" : ""}">
+<b>${i+1}º</b>
+—
+${j.nome}
+—
+<b>${j.pontuacao} pontos</b>
+${souEu ? " 👈 VOCÊ" : ""}
+</p>
+`;
+
+}).join("");
+
+document.getElementById(
+"minhaPosicao"
+).innerText =
+minhaPosicao;
+
+}catch(e){
+
+console.error(e);
+
+}
+
+}
+
+
+/* =========================
+   RANKING FINAL
+========================= */
+
+async function carregarRankingFinal(){
+
+try{
+
+const r =
+await fetch("/api/ranking");
+
+const d =
+await r.json();
+
+if(!d.sucesso)return;
+
+const ranking =
+d.ranking || [];
+
+document.getElementById(
+"rankingFinal"
+).innerHTML =
+ranking.length
+?
+ranking.map((j,i)=>`
+
 <p>
-<b>${i+1}º</b> -
-${j.nome} -
+<b>${i+1}º</b>
+—
+${j.nome}
+—
 <b>${j.pontuacao} pontos</b>
 </p>
-`).join("");
+
+`).join("")
+:
+"<p>Nenhum jogador.</p>";
+
+}catch(e){
+
+console.error(e);
+
+}
 
 }
 
@@ -487,3 +834,4 @@ ${j.nome} -
 
 </body>
 </html>
+```
