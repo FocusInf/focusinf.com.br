@@ -1,13 +1,19 @@
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>📖 Desafio Bíblico</title>
 
 <style>
-*{box-sizing:border-box}
+
+*{
+box-sizing:border-box
+}
 
 body{
 margin:0;
@@ -133,7 +139,9 @@ font-weight:bold;
 color:#1e3a8a;
 margin:20px 0
 }
+
 </style>
+
 </head>
 
 <body>
@@ -236,7 +244,9 @@ onclick="responder('D')">
 
 <h2>🏆 Ranking</h2>
 
-<div class="destaque" id="minhaPosicao">
+<div
+class="destaque"
+id="minhaPosicao">
 </div>
 
 <p class="mensagem">
@@ -300,14 +310,18 @@ let timer = null;
 let fimDaPergunta = 0;
 
 
-/* =========================
+/* ==========================================
    TROCAR TELA
-========================= */
+========================================== */
 
 function tela(nome){
 
 document.querySelectorAll(".tela")
-.forEach(x => x.classList.remove("ativa"));
+.forEach(x => {
+
+x.classList.remove("ativa");
+
+});
 
 document.getElementById(nome)
 .classList.add("ativa");
@@ -315,9 +329,9 @@ document.getElementById(nome)
 }
 
 
-/* =========================
-   ENTRAR
-========================= */
+/* ==========================================
+   ENTRAR NO JOGO
+========================================== */
 
 async function entrar(){
 
@@ -337,26 +351,30 @@ return;
 
 try{
 
-const r = await fetch(
-"/api/jogadores",
-{
+const r =
+await fetch("/api/jogadores",{
+
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 nome:nome
 })
-}
-);
 
-const d = await r.json();
+});
+
+const d =
+await r.json();
 
 if(!d.sucesso){
 
 document.getElementById("mensagem")
 .innerText =
-d.erro || "Erro ao entrar.";
+d.erro ||
+"Erro ao entrar.";
 
 return;
 }
@@ -381,13 +399,15 @@ document.getElementById("mensagem")
 }
 
 
-/* =========================
+/* ==========================================
    VERIFICAR ESTADO DO JOGO
-========================= */
+========================================== */
 
 async function verificar(){
 
-if(!jogadorId)return;
+if(!jogadorId){
+return;
+}
 
 try{
 
@@ -397,14 +417,20 @@ await fetch("/api/jogo");
 const d =
 await r.json();
 
-if(!d.sucesso)return;
+if(!d.sucesso){
 
-const jogo = d.jogo;
+setTimeout(verificar,1000);
+
+return;
+}
+
+const jogo =
+d.jogo;
 
 
-/*
+/* ==========================================
    PARTIDA ENCERRADA
-*/
+========================================== */
 
 if(jogo.encerrado){
 
@@ -414,13 +440,15 @@ await carregarRankingFinal();
 
 tela("final");
 
+setTimeout(verificar,3000);
+
 return;
 }
 
 
-/*
+/* ==========================================
    PERGUNTA ATIVA
-*/
+========================================== */
 
 if(
 jogo.pergunta_ativa &&
@@ -428,21 +456,30 @@ jogo.pergunta
 ){
 
 if(
-ultimaPergunta !== jogo.pergunta.id
+ultimaPergunta !==
+jogo.pergunta.id
 ){
 
 carregar(jogo);
 
 }
 
+/*
+IMPORTANTE:
+
+continuar consultando o servidor
+mesmo enquanto a pergunta está ativa.
+*/
+
+setTimeout(verificar,1000);
+
 return;
 }
 
 
-/*
+/* ==========================================
    PERGUNTA ENCERRADA
-   E JÁ EXISTIU PELO MENOS UMA PERGUNTA
-*/
+========================================== */
 
 if(
 jogo.iniciado &&
@@ -456,31 +493,42 @@ await carregarRanking();
 
 tela("rankingTela");
 
+/*
+Continuar verificando.
+
+Quando o administrador liberar
+a próxima pergunta, o jogador
+vai detectar automaticamente.
+*/
+
+setTimeout(verificar,1000);
+
 return;
 }
 
 
-/*
-   PARTIDA INICIADA MAS AINDA
-   NÃO EXISTE PERGUNTA
-*/
+/* ==========================================
+   AGUARDANDO PRIMEIRA PERGUNTA
+========================================== */
 
 tela("aguardando");
+
+setTimeout(verificar,1000);
 
 }catch(e){
 
 console.error(e);
 
-}
-
-setTimeout(verificar,1000);
+setTimeout(verificar,2000);
 
 }
 
+}
 
-/* =========================
+
+/* ==========================================
    CARREGAR PERGUNTA
-========================= */
+========================================== */
 
 function carregar(jogo){
 
@@ -495,9 +543,15 @@ jogo.numero_pergunta;
 
 respondida = false;
 
+
+/* PERGUNTA */
+
 document.getElementById("texto")
 .innerText =
 jogo.pergunta.pergunta;
+
+
+/* ALTERNATIVAS */
 
 document.getElementById("A")
 .innerText =
@@ -519,18 +573,33 @@ document.getElementById("D")
 "D) " +
 jogo.pergunta.alternativa_d;
 
+
+/* PONTOS */
+
 document.getElementById("pontos")
 .innerText =
 "💰 " +
 jogo.pergunta.pontos +
 " pontos";
 
+
+/* LIMPAR RESULTADO */
+
 document.getElementById("resultado")
 .innerText = "";
 
+
+/* LIBERAR BOTÕES */
+
 ativar();
 
+
+/* MOSTRAR PERGUNTA */
+
 tela("pergunta");
+
+
+/* INICIAR CRONÔMETRO */
 
 iniciarCronometro(
 jogo.tempo_inicio
@@ -539,19 +608,31 @@ jogo.tempo_inicio
 }
 
 
-/* =========================
+/* ==========================================
    CRONÔMETRO
-========================= */
+========================================== */
 
 function iniciarCronometro(inicio){
 
 clearInterval(timer);
 
+if(!inicio){
+
+document.getElementById("tempo")
+.innerText =
+60;
+
+return;
+}
+
 const inicioData =
-new Date(inicio).getTime();
+new Date(inicio)
+.getTime();
 
 fimDaPergunta =
-inicioData + 60000;
+inicioData +
+60000;
+
 
 function atualizar(){
 
@@ -559,7 +640,9 @@ const restante =
 Math.max(
 0,
 Math.ceil(
-(fimDaPergunta-Date.now())/1000
+(fimDaPergunta -
+Date.now()) /
+1000
 )
 );
 
@@ -592,13 +675,19 @@ atualizar,
 }
 
 
-/* =========================
+/* ==========================================
    RESPONDER
-========================= */
+========================================== */
 
 async function responder(alternativa){
 
-if(respondida)return;
+if(respondida){
+return;
+}
+
+if(!perguntaId){
+return;
+}
 
 respondida = true;
 
@@ -612,19 +701,27 @@ const r =
 await fetch(
 "/api/responder",
 {
+
 method:"POST",
+
 headers:{
-"Content-Type":"application/json"
+"Content-Type":
+"application/json"
 },
+
 body:JSON.stringify({
 
-jogador_id:jogadorId,
+jogador_id:
+jogadorId,
 
-pergunta_id:perguntaId,
+pergunta_id:
+perguntaId,
 
-resposta:alternativa
+resposta:
+alternativa
 
 })
+
 }
 );
 
@@ -635,7 +732,9 @@ if(d.sucesso){
 
 if(d.correta){
 
-document.getElementById("resultado")
+document.getElementById(
+"resultado"
+)
 .innerText =
 "✅ Correta! +" +
 d.pontos +
@@ -643,7 +742,9 @@ d.pontos +
 
 }else{
 
-document.getElementById("resultado")
+document.getElementById(
+"resultado"
+)
 .innerText =
 "❌ Resposta incorreta.";
 
@@ -651,7 +752,9 @@ document.getElementById("resultado")
 
 }else{
 
-document.getElementById("resultado")
+document.getElementById(
+"resultado"
+)
 .innerText =
 d.erro ||
 "Erro ao responder.";
@@ -662,7 +765,9 @@ d.erro ||
 
 console.error(e);
 
-document.getElementById("resultado")
+document.getElementById(
+"resultado"
+)
 .innerText =
 "Erro de conexão.";
 
@@ -671,9 +776,9 @@ document.getElementById("resultado")
 }
 
 
-/* =========================
-   BLOQUEAR
-========================= */
+/* ==========================================
+   BLOQUEAR ALTERNATIVAS
+========================================== */
 
 function bloquear(){
 
@@ -688,9 +793,9 @@ document.getElementById(x)
 }
 
 
-/* =========================
-   ATIVAR
-========================= */
+/* ==========================================
+   ATIVAR ALTERNATIVAS
+========================================== */
 
 function ativar(){
 
@@ -705,21 +810,25 @@ document.getElementById(x)
 }
 
 
-/* =========================
-   RANKING
-========================= */
+/* ==========================================
+   CARREGAR RANKING
+========================================== */
 
 async function carregarRanking(){
 
 try{
 
 const r =
-await fetch("/api/ranking");
+await fetch(
+"/api/ranking"
+);
 
 const d =
 await r.json();
 
-if(!d.sucesso)return;
+if(!d.sucesso){
+return;
+}
 
 const ranking =
 d.ranking || [];
@@ -734,13 +843,19 @@ if(ranking.length === 0){
 lista.innerHTML =
 "<p>Nenhum jogador.</p>";
 
+document.getElementById(
+"minhaPosicao"
+).innerText =
+"";
+
 return;
 }
 
 let minhaPosicao = "";
 
 lista.innerHTML =
-ranking.map((j,i)=>{
+ranking
+.map((j,i)=>{
 
 const souEu =
 Number(j.id) ===
@@ -750,7 +865,7 @@ if(souEu){
 
 minhaPosicao =
 "🏅 Você está em " +
-(i+1) +
+(i + 1) +
 "º lugar com " +
 j.pontuacao +
 " pontos";
@@ -758,17 +873,41 @@ j.pontuacao +
 }
 
 return `
-<p class="${souEu ? "meu-ranking" : ""}">
-<b>${i+1}º</b>
+
+<p class="${
+souEu
+?
+"meu-ranking"
+:
+""
+}">
+
+<b>
+${i + 1}º
+</b>
+
 —
+
 ${j.nome}
+
 —
-<b>${j.pontuacao} pontos</b>
-${souEu ? " 👈 VOCÊ" : ""}
+
+<b>
+${j.pontuacao} pontos
+</b>
+
+${souEu
+?
+" 👈 VOCÊ"
+:
+""}
+
 </p>
+
 `;
 
-}).join("");
+})
+.join("");
 
 document.getElementById(
 "minhaPosicao"
@@ -784,21 +923,25 @@ console.error(e);
 }
 
 
-/* =========================
+/* ==========================================
    RANKING FINAL
-========================= */
+========================================== */
 
 async function carregarRankingFinal(){
 
 try{
 
 const r =
-await fetch("/api/ranking");
+await fetch(
+"/api/ranking"
+);
 
 const d =
 await r.json();
 
-if(!d.sucesso)return;
+if(!d.sucesso){
+return;
+}
 
 const ranking =
 d.ranking || [];
@@ -806,20 +949,37 @@ d.ranking || [];
 document.getElementById(
 "rankingFinal"
 ).innerHTML =
+
 ranking.length
+
 ?
-ranking.map((j,i)=>`
+
+ranking
+.map((j,i)=>`
 
 <p>
-<b>${i+1}º</b>
+
+<b>
+${i + 1}º
+</b>
+
 —
+
 ${j.nome}
+
 —
-<b>${j.pontuacao} pontos</b>
+
+<b>
+${j.pontuacao} pontos
+</b>
+
 </p>
 
-`).join("")
+`)
+.join("")
+
 :
+
 "<p>Nenhum jogador.</p>";
 
 }catch(e){
@@ -833,5 +993,6 @@ console.error(e);
 </script>
 
 </body>
+
 </html>
 ```
