@@ -491,35 +491,40 @@ async function atualizar(){
             "⚪ Partida parada";
 
 
-        /* =================================================
-           PERGUNTA ATIVA
-        ================================================= */
 
-        if(
-            j.pergunta_ativa &&
-            j.pergunta
-        ){
+      /* =================================================
+   PERGUNTA ATIVA
+================================================= */
 
-            document.getElementById("texto").innerText =
-                j.pergunta.pergunta;
+if(
+    j.pergunta_ativa &&
+    j.pergunta
+){
 
-            document.getElementById("pontos").innerText =
-                "💰 " +
-                j.pergunta.pontos +
-                " pontos";
+    document.getElementById("texto").innerText =
+        j.pergunta.pergunta;
 
-            document.getElementById("numero").innerText =
-                "Pergunta nº " +
-                j.numero_pergunta;
+    document.getElementById("pontos").innerText =
+        "💰 " +
+        j.pergunta.pontos +
+        " pontos";
 
-            perguntaAtual = j;
+    document.getElementById("numero").innerText =
+        "Pergunta nº " +
+        j.numero_pergunta;
 
-            ultimaPerguntaId =
-                j.pergunta.id;
+    perguntaAtual = j;
 
-            iniciarTimer(j.tempo_inicio);
+    ultimaPerguntaId =
+        j.pergunta.id;
 
-        }
+    if(!timer){
+
+        iniciarTimer(j.tempo_inicio);
+
+    }
+
+}
 
 
         /* =================================================
