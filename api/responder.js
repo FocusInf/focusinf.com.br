@@ -16,8 +16,8 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Método não permitido."
             });
-        }
 
+        }
 
         // =====================================================
         // DADOS RECEBIDOS
@@ -40,11 +40,13 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Dados incompletos."
             });
+
         }
 
 
         const alternativa =
-            String(resposta).toUpperCase();
+            String(resposta)
+            .toUpperCase();
 
 
         if (
@@ -56,11 +58,12 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Alternativa inválida."
             });
+
         }
 
 
         // =====================================================
-        // VERIFICAR JOGO
+        // VERIFICA A PARTIDA
         // =====================================================
 
         const jogo = await sql`
@@ -71,20 +74,32 @@ export default async function handler(req, res) {
         `;
 
 
-        if (
-            !jogo.length ||
-            !jogo[0].pergunta_ativa
-        ) {
+        if (!jogo.length) {
+
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Jogo não encontrado."
+            });
+
+        }
+
+
+        // =====================================================
+        // VERIFICA SE A PERGUNTA ESTÁ ATIVA
+        // =====================================================
+
+        if (!jogo[0].pergunta_ativa) {
 
             return res.status(400).json({
                 sucesso: false,
                 erro: "Não há pergunta ativa."
             });
+
         }
 
 
         // =====================================================
-        // VERIFICAR PERGUNTA ATUAL
+        // CONFERE A PERGUNTA
         // =====================================================
 
         if (
@@ -96,18 +111,33 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Esta não é a pergunta atual."
             });
+
         }
 
 
         // =====================================================
-        // VERIFICAR TEMPO
+        // VERIFICA O TEMPO
         // =====================================================
 
+        if (!jogo[0].tempo_inicio) {
+
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Cronômetro não iniciado."
+            });
+
+        }
+
+
         const inicio =
-            new Date(jogo[0].tempo_inicio);
+            new Date(
+                jogo[0].tempo_inicio
+            );
+
 
         const agora =
             new Date();
+
 
         const segundos =
             Math.floor(
@@ -117,23 +147,16 @@ export default async function handler(req, res) {
 
         if (segundos >= 60) {
 
-            await sql`
-                UPDATE jogo
-                SET
-                    pergunta_ativa = FALSE,
-                    tempo_restante = 0,
-                    tempo_inicio = NULL
-            `;
-
             return res.status(400).json({
                 sucesso: false,
                 erro: "Tempo encerrado."
             });
+
         }
 
 
         // =====================================================
-        // VERIFICAR JOGADOR
+        // VERIFICA JOGADOR
         // =====================================================
 
         const jogador = await sql`
@@ -152,11 +175,12 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Jogador não encontrado."
             });
+
         }
 
 
         // =====================================================
-        // VERIFICAR SE JÁ RESPONDEU
+        // VERIFICA SE JÁ RESPONDEU
         // =====================================================
 
         const jaRespondeu = await sql`
@@ -174,11 +198,12 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Você já respondeu esta pergunta."
             });
+
         }
 
 
         // =====================================================
-        // BUSCAR PERGUNTA
+        // BUSCA A PERGUNTA
         // =====================================================
 
         const pergunta = await sql`
@@ -197,14 +222,25 @@ export default async function handler(req, res) {
                 sucesso: false,
                 erro: "Pergunta não encontrada."
             });
+
         }
 
 
         // =====================================================
-        // CALCULAR PONTOS
+        // CALCULA OS PONTOS
         // =====================================================
 
         let pontos = 10;
+
+
+        if (
+            pergunta[0].dificuldade ===
+            "facil"
+        ) {
+
+            pontos = 10;
+
+        }
 
 
         if (
@@ -213,6 +249,7 @@ export default async function handler(req, res) {
         ) {
 
             pontos = 20;
+
         }
 
 
@@ -222,6 +259,7 @@ export default async function handler(req, res) {
         ) {
 
             pontos = 30;
+
         }
 
 
@@ -231,26 +269,29 @@ export default async function handler(req, res) {
         ) {
 
             pontos = 40;
+
         }
 
 
         // =====================================================
-        // VERIFICAR RESPOSTA
+        // CONFERE RESPOSTA
         // =====================================================
 
         const correta =
             alternativa ===
-            pergunta[0].resposta_correta;
+            String(
+                pergunta[0].resposta_correta
+            ).toUpperCase();
 
 
         const pontosGanhos =
             correta
-                ? pontos
-                : 0;
+            ? pontos
+            : 0;
 
 
         // =====================================================
-        // REGISTRAR RESPOSTA
+        // SALVA A RESPOSTA
         // =====================================================
 
         await sql`
@@ -272,82 +313,41 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // ATUALIZAR PONTUAÇÃO
+        // ATUALIZA PONTUAÇÃO
         // =====================================================
 
         if (pontosGanhos > 0) {
 
             await sql`
                 UPDATE jogadores
-                SET
-                    pontuacao =
-                    pontuacao +
-                    ${pontosGanhos}
+                SET pontuacao =
+                    pontuacao + ${pontosGanhos}
                 WHERE id = ${jogador_id}
             `;
+
         }
 
 
         // =====================================================
-        // TOTAL DE JOGADORES
+        // IMPORTANTE
+        //
+        // NÃO ENCERRA A PERGUNTA AQUI.
+        //
+        // Mesmo que todos os jogadores respondam,
+        // a pergunta continua ativa.
+        //
+        // Quem encerra é SOMENTE o administrador
+        // através do botão "Encerrar pergunta".
         // =====================================================
 
-        const totalJogadores = await sql`
-            SELECT
-                COUNT(*)::integer AS total
-            FROM jogadores
-        `;
-
-
-        // =====================================================
-        // TOTAL DE RESPOSTAS
-        // =====================================================
-
-        const totalRespostas = await sql`
-            SELECT
-                COUNT(*)::integer AS total
-            FROM respostas
-            WHERE pergunta_id = ${pergunta_id}
-        `;
-
-
-        // =====================================================
-        // TODOS RESPONDERAM
-        // =====================================================
-
-        const todosResponderam =
-            totalJogadores[0].total > 0 &&
-            totalRespostas[0].total >=
-            totalJogadores[0].total;
-
-
-        if (todosResponderam) {
-
-            await sql`
-                UPDATE jogo
-                SET
-                    iniciado = FALSE,
-                    pergunta_ativa = FALSE,
-                    encerrado = TRUE,
-                    tempo_inicio = NULL,
-                    tempo_restante = 0
-            `;
-        }
-
-
-        // =====================================================
-        // RESPOSTA OK
-        // =====================================================
 
         return res.status(200).json({
 
             sucesso: true,
 
-            correta,
+            correta: correta,
 
-            pontos: pontosGanhos,
-
-            finalizado: todosResponderam
+            pontos: pontosGanhos
 
         });
 
