@@ -6,8 +6,60 @@ export default async function handler(req, res) {
 
         const sql = neon(process.env.DATABASE_URL);
 
+
         // =====================================================
-        // SOMENTE POST
+        // GET - CONTAR RESPOSTAS DA PERGUNTA
+        // =====================================================
+
+        if (req.method === "GET") {
+
+            const pergunta_id =
+                Number(req.query.pergunta_id);
+
+            if (!pergunta_id) {
+
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Pergunta não informada."
+                });
+
+            }
+
+
+            // TOTAL DE JOGADORES
+
+            const totalJogadores = await sql`
+                SELECT COUNT(*)::integer AS total
+                FROM jogadores
+            `;
+
+
+            // TOTAL DE RESPOSTAS
+
+            const totalRespostas = await sql`
+                SELECT COUNT(*)::integer AS total
+                FROM respostas
+                WHERE pergunta_id = ${pergunta_id}
+            `;
+
+
+            return res.status(200).json({
+
+                sucesso: true,
+
+                totalJogadores:
+                    totalJogadores[0].total,
+
+                totalRespostas:
+                    totalRespostas[0].total
+
+            });
+
+        }
+
+
+        // =====================================================
+        // POST - RESPONDER
         // =====================================================
 
         if (req.method !== "POST") {
@@ -19,9 +71,6 @@ export default async function handler(req, res) {
 
         }
 
-        // =====================================================
-        // DADOS RECEBIDOS
-        // =====================================================
 
         const {
             jogador_id,
@@ -45,8 +94,7 @@ export default async function handler(req, res) {
 
 
         const alternativa =
-            String(resposta)
-            .toUpperCase();
+            String(resposta).toUpperCase();
 
 
         if (
@@ -63,7 +111,7 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // VERIFICA A PARTIDA
+        // VERIFICAR JOGO
         // =====================================================
 
         const jogo = await sql`
@@ -74,21 +122,10 @@ export default async function handler(req, res) {
         `;
 
 
-        if (!jogo.length) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Jogo não encontrado."
-            });
-
-        }
-
-
-        // =====================================================
-        // VERIFICA SE A PERGUNTA ESTÁ ATIVA
-        // =====================================================
-
-        if (!jogo[0].pergunta_ativa) {
+        if (
+            !jogo.length ||
+            !jogo[0].pergunta_ativa
+        ) {
 
             return res.status(400).json({
                 sucesso: false,
@@ -97,10 +134,6 @@ export default async function handler(req, res) {
 
         }
 
-
-        // =====================================================
-        // CONFERE A PERGUNTA
-        // =====================================================
 
         if (
             Number(jogo[0].pergunta_id) !==
@@ -116,28 +149,14 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // VERIFICA O TEMPO
+        // VERIFICAR TEMPO
         // =====================================================
 
-        if (!jogo[0].tempo_inicio) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Cronômetro não iniciado."
-            });
-
-        }
-
-
         const inicio =
-            new Date(
-                jogo[0].tempo_inicio
-            );
-
+            new Date(jogo[0].tempo_inicio);
 
         const agora =
             new Date();
-
 
         const segundos =
             Math.floor(
@@ -145,7 +164,14 @@ export default async function handler(req, res) {
             );
 
 
-        if (segundos >= 60) {
+        if(segundos >= 60){
+
+            await sql`
+                UPDATE jogo
+                SET
+                    pergunta_ativa = FALSE,
+                    tempo_restante = 0
+            `;
 
             return res.status(400).json({
                 sucesso: false,
@@ -156,20 +182,18 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // VERIFICA JOGADOR
+        // VERIFICAR JOGADOR
         // =====================================================
 
         const jogador = await sql`
-            SELECT
-                id,
-                nome
+            SELECT id, nome
             FROM jogadores
             WHERE id = ${jogador_id}
             LIMIT 1
         `;
 
 
-        if (!jogador.length) {
+        if(!jogador.length){
 
             return res.status(404).json({
                 sucesso: false,
@@ -180,7 +204,7 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // VERIFICA SE JÁ RESPONDEU
+        // VERIFICAR SE JÁ RESPONDEU
         // =====================================================
 
         const jaRespondeu = await sql`
@@ -192,7 +216,7 @@ export default async function handler(req, res) {
         `;
 
 
-        if (jaRespondeu.length) {
+        if(jaRespondeu.length){
 
             return res.status(409).json({
                 sucesso: false,
@@ -203,7 +227,7 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // BUSCA A PERGUNTA
+        // BUSCAR PERGUNTA
         // =====================================================
 
         const pergunta = await sql`
@@ -216,7 +240,7 @@ export default async function handler(req, res) {
         `;
 
 
-        if (!pergunta.length) {
+        if(!pergunta.length){
 
             return res.status(404).json({
                 sucesso: false,
@@ -227,71 +251,55 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // CALCULA OS PONTOS
+        // CALCULAR PONTOS
         // =====================================================
 
         let pontos = 10;
 
 
-        if (
-            pergunta[0].dificuldade ===
-            "facil"
-        ) {
-
+        if(
+            pergunta[0].dificuldade === "facil"
+        ){
             pontos = 10;
-
         }
 
 
-        if (
-            pergunta[0].dificuldade ===
-            "medio"
-        ) {
-
+        if(
+            pergunta[0].dificuldade === "medio"
+        ){
             pontos = 20;
-
         }
 
 
-        if (
-            pergunta[0].dificuldade ===
-            "dificil"
-        ) {
-
+        if(
+            pergunta[0].dificuldade === "dificil"
+        ){
             pontos = 30;
-
         }
 
 
-        if (
-            pergunta[0].dificuldade ===
-            "desafio"
-        ) {
-
+        if(
+            pergunta[0].dificuldade === "desafio"
+        ){
             pontos = 40;
-
         }
 
-
-        // =====================================================
-        // CONFERE RESPOSTA
-        // =====================================================
 
         const correta =
             alternativa ===
-            String(
-                pergunta[0].resposta_correta
-            ).toUpperCase();
+            pergunta[0].resposta_correta;
 
 
         const pontosGanhos =
             correta
-            ? pontos
-            : 0;
+            ?
+            pontos
+            :
+            0;
 
 
         // =====================================================
-        // SALVA A RESPOSTA
+        // REGISTRAR RESPOSTA
         // =====================================================
 
         await sql`
@@ -313,15 +321,17 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // ATUALIZA PONTUAÇÃO
+        // ATUALIZAR PONTUAÇÃO
         // =====================================================
 
-        if (pontosGanhos > 0) {
+        if(pontosGanhos > 0){
 
             await sql`
                 UPDATE jogadores
-                SET pontuacao =
-                    pontuacao + ${pontosGanhos}
+                SET
+                    pontuacao =
+                    pontuacao +
+                    ${pontosGanhos}
                 WHERE id = ${jogador_id}
             `;
 
@@ -329,30 +339,68 @@ export default async function handler(req, res) {
 
 
         // =====================================================
-        // IMPORTANTE
-        //
-        // NÃO ENCERRA A PERGUNTA AQUI.
-        //
-        // Mesmo que todos os jogadores respondam,
-        // a pergunta continua ativa.
-        //
-        // Quem encerra é SOMENTE o administrador
-        // através do botão "Encerrar pergunta".
+        // CONTAR JOGADORES
         // =====================================================
+
+        const totalJogadores = await sql`
+            SELECT COUNT(*)::integer AS total
+            FROM jogadores
+        `;
+
+
+        // =====================================================
+        // CONTAR RESPOSTAS
+        // =====================================================
+
+        const totalRespostas = await sql`
+            SELECT COUNT(*)::integer AS total
+            FROM respostas
+            WHERE pergunta_id = ${pergunta_id}
+        `;
+
+
+        const jogadores =
+            totalJogadores[0].total;
+
+        const respostas =
+            totalRespostas[0].total;
+
+
+        // =====================================================
+        // TODOS RESPONDERAM
+        // =====================================================
+
+        if(
+            jogadores > 0 &&
+            respostas >= jogadores
+        ){
+
+            await sql`
+                UPDATE jogo
+                SET
+                    pergunta_ativa = FALSE,
+                    tempo_restante = 0
+            `;
+
+        }
 
 
         return res.status(200).json({
 
             sucesso: true,
 
-            correta: correta,
+            correta,
 
-            pontos: pontosGanhos
+            pontos: pontosGanhos,
+
+            totalJogadores: jogadores,
+
+            totalRespostas: respostas
 
         });
 
 
-    } catch (erro) {
+    } catch(erro){
 
         console.error(erro);
 
