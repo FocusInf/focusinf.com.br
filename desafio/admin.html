@@ -588,6 +588,25 @@ function iniciarTimer(inicio){
 
     function atualizarTimer(){
 
+        /*
+         * Se a pergunta já foi encerrada,
+         * não continua contando.
+         */
+
+        if(
+            perguntaAtual &&
+            perguntaAtual.pergunta_ativa === false
+        ){
+
+            clearInterval(timer);
+
+            document.getElementById("tempo").innerText =
+                "ENCERRADA";
+
+            return;
+        }
+
+
         const restante =
             Math.max(
                 0,
@@ -605,12 +624,6 @@ function iniciarTimer(inicio){
 
             clearInterval(timer);
 
-            /*
-             * O cronômetro visual chegou a zero.
-             * A API continuará controlando a validade
-             * da pergunta.
-             */
-
         }
 
     }
@@ -626,8 +639,6 @@ function iniciarTimer(inicio){
         );
 
 }
-
-
 /* =====================================================
    CONTAR RESPOSTAS
 ===================================================== */
