@@ -513,28 +513,30 @@ async function verificar(){
         // PERGUNTA ATIVA
         // =================================================
 
-        if(
-            jogo.pergunta_ativa === true &&
-            jogo.pergunta
-        ){
-
-            if(
-                ultimaPergunta !==
-                jogo.pergunta.id
-            ){
-
-                carregar(jogo);
-
-            }
 
 
-            setTimeout(
-                verificar,
-                1000
-            );
+if(
+    jogo.pergunta_ativa === true &&
+    jogo.pergunta
+){
 
-            return;
-        }
+    if(
+        Number(ultimaPergunta) !==
+        Number(jogo.pergunta.id)
+    ){
+
+        carregar(jogo);
+
+    }
+
+
+    setTimeout(
+        verificar,
+        500
+    );
+
+    return;
+}
 
 
         // =================================================
