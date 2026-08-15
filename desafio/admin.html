@@ -631,91 +631,50 @@ function iniciarTimer(inicio){
 /* =====================================================
    CONTAR RESPOSTAS
 ===================================================== */
-
 async function atualizarRespostas(){
 
     try{
-
-        const r =
-            await fetch(
-                "/api/jogadores"
-            );
-
-        const d =
-            await r.json();
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-
-        const jogadores =
-            d.jogadores || [];
-
-
-        /*
-         * A contagem real das respostas é obtida
-         * pelo novo endpoint abaixo.
-         */
 
         if(
             !perguntaAtual ||
             !perguntaAtual.pergunta
         ){
 
-            document.getElementById(
-                "respostas"
-            ).innerText =
-                jogadores.length +
-                " jogadores";
-
             return;
         }
 
-
-        const respostaR =
+        const r =
             await fetch(
                 "/api/responder?pergunta_id=" +
-                perguntaAtual.pergunta.id
+                perguntaAtual.pergunta.id +
+                "&_=" +
+                Date.now()
             );
 
-
-        if(!respostaR.ok){
-
-            document.getElementById(
-                "respostas"
-            ).innerText =
-                "Aguardando respostas...";
+        if(!r.ok){
 
             return;
         }
 
+        const d =
+            await r.json();
 
-        const respostaD =
-            await respostaR.json();
-
-
-        if(respostaD.totalJogadores !== undefined){
+        if(d.totalJogadores !== undefined){
 
             document.getElementById(
                 "respostas"
             ).innerText =
 
-                respostaD.totalRespostas +
+                d.totalRespostas +
                 " / " +
-                respostaD.totalJogadores +
+                d.totalJogadores +
                 " jogadores responderam";
 
 
-            /*
-             * TODOS RESPONDERAM
-             */
-
             if(
-                respostaD.totalJogadores > 0 &&
-                respostaD.totalRespostas >=
-                respostaD.totalJogadores
+                d.totalJogadores > 0 &&
+                d.totalRespostas >=
+                d.totalJogadores
             ){
 
                 clearInterval(timer);
@@ -728,18 +687,9 @@ async function atualizarRespostas(){
                 document.getElementById(
                     "status"
                 ).innerText =
-                    "🟡 Todos responderam — ranking liberado";
+                    "🟡 Todos responderam";
 
-                /*
-                 * Atualiza o estado do jogo
-                 * imediatamente.
-                 */
-
-                setTimeout(
-                    atualizar,
-                    100
-                );
-
+                return;
             }
 
         }
@@ -751,66 +701,6 @@ async function atualizarRespostas(){
     }
 
 }
-
-
-/* =====================================================
-   JOGADORES
-===================================================== */
-
-async function jogadores(){
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/jogadores"
-            );
-
-        const d =
-            await r.json();
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-
-        document.getElementById(
-            "jogadores"
-        ).innerHTML =
-
-            d.jogadores.length
-
-            ?
-
-            d.jogadores
-            .map(j=>`
-
-                <p>
-
-                    👤 ${j.nome}
-
-                    <br>
-
-                    💰 ${j.pontuacao} pontos
-
-                </p>
-
-            `)
-            .join("")
-
-            :
-
-            "Nenhum jogador.";
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
-}
-
 
 /* =====================================================
    RANKING
