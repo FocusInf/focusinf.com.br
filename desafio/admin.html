@@ -644,6 +644,7 @@ function iniciarTimer(inicio){
         );
 
 }
+   
 /* =====================================================
    CONTAR RESPOSTAS
 ===================================================== */
@@ -717,6 +718,79 @@ async function atualizarRespostas(){
     }
 
 }
+
+/* =====================================================
+   LISTAR JOGADORES
+===================================================== */
+
+async function jogadores(){
+
+    try{
+
+        const r =
+            await fetch(
+                "/api/jogadores?_=" + Date.now()
+            );
+
+        const d =
+            await r.json();
+
+        if(!d.sucesso){
+
+            document.getElementById(
+                "jogadores"
+            ).innerText =
+                "Erro ao carregar jogadores.";
+
+            return;
+        }
+
+
+        const lista =
+            d.jogadores || [];
+
+
+        if(lista.length === 0){
+
+            document.getElementById(
+                "jogadores"
+            ).innerText =
+                "Nenhum jogador.";
+
+            return;
+        }
+
+
+        document.getElementById(
+            "jogadores"
+        ).innerHTML =
+
+            lista.map(j => `
+
+                <p>
+
+                    👤 <b>${j.nome}</b>
+
+                    <br>
+
+                    💰 ${j.pontuacao} pontos
+
+                </p>
+
+            `).join("");
+
+
+    }catch(e){
+
+        console.error(e);
+
+        document.getElementById(
+            "jogadores"
+        ).innerText =
+            "Erro de conexão.";
+    }
+
+}   
 
 /* =====================================================
    RANKING
