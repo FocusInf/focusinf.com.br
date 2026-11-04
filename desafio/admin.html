@@ -101,8 +101,7 @@ button.encerrar {
     color: #1e3a8a;
 }
 
-.ranking p,
-#jogadores p {
+.ranking p {
     padding: 10px;
     margin: 5px 0;
     background: white;
@@ -112,6 +111,46 @@ button.encerrar {
 #aviso {
     color: #b91c1c;
     font-weight: bold;
+}
+
+/* ================================================
+   NOVO - LISTA DE JOGADORES
+   ================================================ */
+
+/* Coloca nome, pontos e botão na mesma linha. */
+.jogador-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    margin: 5px 0;
+    background: white;
+    border-radius: 8px;
+}
+
+/* Permite que o nome ocupe o espaço disponível. */
+.jogador-info {
+    flex: 1;
+    min-width: 140px;
+    overflow-wrap: anywhere;
+}
+
+/* Botão pequeno para remover somente um jogador. */
+button.btn-remover {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 9px 12px;
+    background: #b91c1c;
+    color: white;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+button.btn-remover:hover:not(:disabled) {
+    background: #991b1b;
 }
 
 @media (max-width: 700px) {
@@ -159,6 +198,11 @@ button.encerrar {
 
     <div class="card">
         <h2>👥 Jogadores</h2>
+
+        <!--
+            Cada jogador será exibido com seu nome,
+            pontuação e botão Remover.
+        -->
         <div id="jogadores">Carregando...</div>
     </div>
 
@@ -194,6 +238,9 @@ button.encerrar {
 // =====================================================
 // DESAFIO BÍBLICO - PAINEL ADMINISTRATIVO
 // =====================================================
+// Controla a partida e permite remover individualmente
+// os jogadores que desistirem.
+// =====================================================
 
 // Guarda o estado atual da partida.
 let estadoAtual = null;
@@ -212,21 +259,25 @@ let consultaEmAndamento = false;
 // Guarda a pergunta para contar respostas.
 let ultimaPerguntaId = null;
 
+// Guarda a senha apenas na memória desta página.
+// Não grava a senha no armazenamento do navegador.
+let senhaAdmin = "";
+
 // =====================================================
 // FUNÇÕES AUXILIARES
 // =====================================================
 
-// Encontra um elemento da página pelo ID.
+// Encontra um elemento pelo ID.
 function elemento(id) {
     return document.getElementById(id);
 }
 
-// Mostra mensagens de erro ou conexão.
+// Mostra mensagens no painel.
 function aviso(mensagem) {
     elemento("aviso").textContent = mensagem || "";
 }
 
-// Habilita ou desabilita os botões.
+// Habilita ou desabilita os botões de controle.
 function controlarBotoes() {
     const j = estadoAtual;
 
@@ -246,26 +297,36 @@ function controlarBotoes() {
 
     elemento("btnEncerrar").disabled =
         comandoEmAndamento;
+
+    // Bloqueia temporariamente os botões Remover
+    // enquanto outro comando estiver sendo executado.
+    document.querySelectorAll(".btn-remover")
+        .forEach(botao => {
+            botao.disabled = comandoEmAndamento;
+        });
 }
 
 // =====================================================
-// ENVIAR COMANDO AO SERVIDOR COM SENHA DO ADMINISTRADOR
+// ENVIAR COMANDO AO SERVIDOR COM SENHA
 // =====================================================
 
-// Mantém a senha apenas na memória da página atual.
-// Ela não é gravada no localStorage nem no sessionStorage.
-let senhaAdmin = "";
+// O segundo parâmetro permite enviar informações extras,
+// como o ID do jogador que será removido.
+async function enviarComando(acao, parametros = {}) {
 
-async function enviarComando(acao) {
-    // Evita dois cliques simultâneos.
+    // Impede dois comandos simultâneos.
     if (comandoEmAndamento) return null;
 
-    // Solicita a senha somente quando for executar um comando.
+    // Solicita a senha na primeira operação.
     if (!senhaAdmin) {
-        const digitada = prompt("Digite a senha do administrador:");
+        const digitada = prompt(
+            "Digite a senha do administrador:"
+        );
 
-        // Cancelar o pedido não executa nenhuma ação.
-        if (digitada === null || digitada === "") return null;
+        // Não executa nada se cancelar.
+        if (digitada === null || digitada === "") {
+            return null;
+        }
 
         senhaAdmin = digitada;
     }
@@ -275,43 +336,64 @@ async function enviarComando(acao) {
     aviso("");
 
     try {
+
         const resposta = await fetch("/api/jogo", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                // O servidor verificará esta senha antes de executar a ação.
+
+                // Senha verificada pela API no servidor.
                 "X-Admin-Password": senhaAdmin
             },
             cache: "no-store",
-            body: JSON.stringify({ acao })
+
+            // Envia a ação e seus parâmetros.
+            body: JSON.stringify({
+                acao,
+                ...parametros
+            })
         });
 
-        // Tenta ler a mensagem enviada pela API.
         const dados = await resposta.json();
 
-        // Apaga a senha da memória se o servidor a rejeitar.
-        if (resposta.status === 401 || resposta.status === 403) {
+        // Se a senha estiver incorreta, solicita
+        // novamente na próxima tentativa.
+        if (
+            resposta.status === 401 ||
+            resposta.status === 403
+        ) {
             senhaAdmin = "";
-            throw new Error(dados.erro || "Senha incorreta. Tente novamente.");
+
+            throw new Error(
+                dados.erro ||
+                "Senha incorreta. Tente novamente."
+            );
         }
 
         if (!resposta.ok || !dados.sucesso) {
             throw new Error(
-                dados.erro || "Não foi possível executar o comando."
+                dados.erro ||
+                "Não foi possível executar o comando."
             );
         }
 
-        // Atualiza o painel depois de executar o comando.
+        // Atualiza as informações após o comando.
         await atualizarTudo();
 
         return dados;
 
     } catch (erro) {
+
         console.error("Erro no comando:", erro);
-        aviso(erro.message || "Erro de conexão.");
+
+        aviso(
+            erro.message || "Erro de conexão."
+        );
+
         return null;
 
     } finally {
+
         comandoEmAndamento = false;
         controlarBotoes();
     }
@@ -322,7 +404,8 @@ async function enviarComando(acao) {
 // =====================================================
 
 async function iniciar() {
-    // Iniciar zera as respostas e pontuações anteriores.
+
+    // Iniciar uma nova partida zera pontos e respostas.
     if (!confirm(
         "Iniciar uma nova partida?\n\n" +
         "As respostas e pontuações anteriores serão zeradas."
@@ -345,6 +428,7 @@ async function iniciar() {
 // =====================================================
 
 async function proxima() {
+
     const dados = await enviarComando("proxima");
 
     if (dados && dados.finalizado) {
@@ -356,9 +440,8 @@ async function proxima() {
 // FINALIZAR E MOSTRAR RANKING
 // =====================================================
 
-// Este comando finaliza a partida e mantém o ranking.
-// Não é apenas uma pausa entre perguntas.
 async function finalizar() {
+
     if (!confirm(
         "Finalizar a partida e mostrar o ranking final?"
     )) {
@@ -369,12 +452,11 @@ async function finalizar() {
 }
 
 // =====================================================
-// ENCERRAR E LIMPAR JOGADORES
+// ENCERRAR E LIMPAR TODOS OS JOGADORES
 // =====================================================
 
-// Atenção: esta ação remove jogadores e respostas.
-// As perguntas cadastradas no Neon são preservadas.
 async function encerrar() {
+
     if (!confirm(
         "ATENÇÃO!\n\n" +
         "Encerrar e apagar jogadores, respostas e pontuações?"
@@ -392,20 +474,66 @@ async function encerrar() {
 }
 
 // =====================================================
+// NOVO - REMOVER UM JOGADOR ESPECÍFICO
+// =====================================================
+
+// Esta função é chamada pelo botão Remover.
+// Recebe o ID e o nome do jogador selecionado.
+async function removerJogador(jogadorId, nomeJogador) {
+
+    // Evita remover enquanto outro comando está ativo.
+    if (comandoEmAndamento) return;
+
+    // Confirma qual jogador será removido.
+    const confirmado = confirm(
+        "REMOVER JOGADOR\n\n" +
+        "Jogador: " + nomeJogador + "\n\n" +
+        "O cadastro, as respostas e os pontos " +
+        "deste jogador serão apagados.\n\n" +
+        "Os demais jogadores continuarão normalmente.\n\n" +
+        "Deseja continuar?"
+    );
+
+    // Cancelar mantém o jogador no jogo.
+    if (!confirmado) return;
+
+    // Envia o ID ao servidor, com a senha administrativa.
+    const dados = await enviarComando(
+        "remover_jogador",
+        {
+            jogador_id: jogadorId
+        }
+    );
+
+    // Se o servidor confirmou, mostra a mensagem.
+    if (dados) {
+
+        // Atualiza jogadores, ranking e respostas.
+        await atualizarTudo();
+
+        alert(
+            dados.mensagem ||
+            "Jogador removido com sucesso."
+        );
+    }
+}
+
+// =====================================================
 // CRONÔMETRO
 // =====================================================
 
-// Para o cronômetro e libera sua referência.
-// Isso permite iniciar outro cronômetro na nova rodada.
+// Para o cronômetro da rodada anterior.
 function pararTimer() {
+
     if (intervaloTimer !== null) {
         clearInterval(intervaloTimer);
         intervaloTimer = null;
     }
 }
 
-// Atualiza os segundos exibidos no painel.
+// Atualiza os segundos exibidos.
 function desenharTempo() {
+
     if (!estadoAtual || !estadoAtual.pergunta_ativa) {
         pararTimer();
         return;
@@ -413,7 +541,9 @@ function desenharTempo() {
 
     const restante = Math.max(
         0,
-        Math.ceil((fimLocal - Date.now()) / 1000)
+        Math.ceil(
+            (fimLocal - Date.now()) / 1000
+        )
     );
 
     elemento("tempo").textContent = String(restante);
@@ -424,12 +554,13 @@ function desenharTempo() {
     }
 }
 
-// Inicia um cronômetro para a pergunta atual.
+// Inicia o cronômetro da pergunta atual.
 function iniciarTimer(jogo) {
+
     pararTimer();
 
     // Usa o tempo restante informado pelo servidor.
-    // Assim, uma atualização da página não reinicia os 60s.
+    // Atualizar a página não reinicia os 60 segundos.
     const restante = Math.max(
         0,
         Number(jogo.tempo_restante || 0)
@@ -440,7 +571,10 @@ function iniciarTimer(jogo) {
     desenharTempo();
 
     if (restante > 0) {
-        intervaloTimer = setInterval(desenharTempo, 250);
+        intervaloTimer = setInterval(
+            desenharTempo,
+            250
+        );
     }
 }
 
@@ -449,6 +583,7 @@ function iniciarTimer(jogo) {
 // =====================================================
 
 async function atualizarJogo() {
+
     const resposta = await fetch(
         "/api/jogo?_=" + Date.now(),
         { cache: "no-store" }
@@ -461,13 +596,15 @@ async function atualizarJogo() {
     const dados = await resposta.json();
 
     if (!dados.sucesso || !dados.jogo) {
-        throw new Error(dados.erro || "Estado indisponível.");
+        throw new Error(
+            dados.erro || "Estado indisponível."
+        );
     }
 
     const j = dados.jogo;
     estadoAtual = j;
 
-    // Atualiza a situação da partida.
+    // Atualiza o status da partida.
     elemento("status").textContent =
         j.encerrado
             ? "🏆 Partida finalizada"
@@ -482,7 +619,8 @@ async function atualizarJogo() {
     }
 
     if (j.pergunta_ativa && j.pergunta) {
-        // Identifica a rodada pelo ID, número e horário.
+
+        // Identifica a rodada.
         const chaveRodada = [
             j.pergunta.id,
             j.numero_pergunta,
@@ -498,7 +636,7 @@ async function atualizarJogo() {
         elemento("numero").textContent =
             "Pergunta nº " + j.numero_pergunta;
 
-        // Só reinicia o cronômetro quando muda a rodada.
+        // Só reinicia o cronômetro se a rodada mudou.
         if (
             chaveRodada !== rodadaAtual ||
             intervaloTimer === null
@@ -508,7 +646,8 @@ async function atualizarJogo() {
         }
 
     } else {
-        // A pergunta terminou ou ainda não foi liberada.
+
+        // A pergunta terminou ou não foi liberada.
         pararTimer();
         rodadaAtual = null;
 
@@ -532,6 +671,7 @@ async function atualizarJogo() {
 // =====================================================
 
 async function atualizarRespostas() {
+
     if (!ultimaPerguntaId) {
         elemento("respostas").textContent =
             "0 / 0 jogadores responderam";
@@ -559,10 +699,11 @@ async function atualizarRespostas() {
 }
 
 // =====================================================
-// LISTAR JOGADORES
+// LISTAR JOGADORES COM BOTÃO REMOVER
 // =====================================================
 
 async function atualizarJogadores() {
+
     const resposta = await fetch(
         "/api/jogadores?_=" + Date.now(),
         { cache: "no-store" }
@@ -571,9 +712,12 @@ async function atualizarJogadores() {
     if (!resposta.ok) return;
 
     const dados = await resposta.json();
+
     if (!dados.sucesso) return;
 
     const destino = elemento("jogadores");
+
+    // Limpa a lista antes de desenhar a versão atual.
     destino.replaceChildren();
 
     if (!dados.jogadores?.length) {
@@ -581,14 +725,47 @@ async function atualizarJogadores() {
         return;
     }
 
-    // textContent evita interpretar nomes como código HTML.
+    // Cria uma linha para cada jogador.
     for (const jogador of dados.jogadores) {
-        const linha = document.createElement("p");
 
-        linha.textContent =
+        // Linha contendo informações e botão.
+        const linha = document.createElement("div");
+        linha.className = "jogador-linha";
+
+        // Exibe nome e pontuação.
+        const informacoes = document.createElement("span");
+        informacoes.className = "jogador-info";
+
+        // textContent impede executar HTML enviado
+        // como nome de jogador.
+        informacoes.textContent =
             "👤 " + jogador.nome +
             " — 💰 " + jogador.pontuacao + " pontos";
 
+        // Cria o botão individual de remoção.
+        const botao = document.createElement("button");
+
+        botao.type = "button";
+        botao.className = "btn-remover";
+        botao.textContent = "🗑️ Remover";
+
+        // Desabilita durante operações administrativas.
+        botao.disabled = comandoEmAndamento;
+
+        // Identifica o jogador pelo ID, nunca
+        // apenas pelo nome.
+        botao.onclick = () => {
+            removerJogador(
+                jogador.id,
+                jogador.nome
+            );
+        };
+
+        // Coloca os elementos na linha.
+        linha.appendChild(informacoes);
+        linha.appendChild(botao);
+
+        // Adiciona a linha ao painel.
         destino.appendChild(linha);
     }
 }
@@ -598,6 +775,7 @@ async function atualizarJogadores() {
 // =====================================================
 
 async function atualizarRanking() {
+
     const resposta = await fetch(
         "/api/ranking?_=" + Date.now(),
         { cache: "no-store" }
@@ -606,6 +784,7 @@ async function atualizarRanking() {
     if (!resposta.ok) return;
 
     const dados = await resposta.json();
+
     if (!dados.sucesso) return;
 
     const destino = elemento("ranking");
@@ -617,6 +796,7 @@ async function atualizarRanking() {
     }
 
     dados.ranking.forEach((jogador, indice) => {
+
         const linha = document.createElement("p");
 
         linha.textContent =
@@ -634,12 +814,14 @@ async function atualizarRanking() {
 // =====================================================
 
 async function atualizarTudo() {
-    // Evita consultas sobrepostas quando a internet está lenta.
+
+    // Evita consultas simultâneas.
     if (consultaEmAndamento) return;
 
     consultaEmAndamento = true;
 
     try {
+
         await atualizarJogo();
 
         // Atualiza as demais informações.
@@ -652,21 +834,31 @@ async function atualizarTudo() {
         aviso("");
 
     } catch (erro) {
-        console.error("Erro de atualização:", erro);
-        aviso("Falha de conexão. Tentando novamente...");
+
+        console.error(
+            "Erro de atualização:",
+            erro
+        );
+
+        aviso(
+            "Falha de conexão. Tentando novamente..."
+        );
 
     } finally {
+
         consultaEmAndamento = false;
     }
 }
 
-// Executa uma consulta por vez, sem acumular requisições.
+// Consulta periodicamente o estado do jogo.
 async function ciclo() {
+
     await atualizarTudo();
+
     setTimeout(ciclo, 1000);
 }
 
-// Inicia o painel.
+// Inicia o painel administrativo.
 controlarBotoes();
 ciclo();
 
