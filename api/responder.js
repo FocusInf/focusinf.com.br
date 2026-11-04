@@ -1,417 +1,238 @@
+
 import { neon } from "@neondatabase/serverless";
 
+// API de respostas do Desafio Bíblico.
+// O banco decide se a pergunta ainda está dentro dos 60 segundos.
 export default async function handler(req, res) {
-
-    try {
-
-        const sql = neon(process.env.DATABASE_URL);
-
-
-        // =====================================================
-        // GET - CONTAR RESPOSTAS DA PERGUNTA
-        // =====================================================
-
-        if (req.method === "GET") {
-
-            const pergunta_id =
-                Number(req.query.pergunta_id);
-
-            if (!pergunta_id) {
-
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: "Pergunta não informada."
-                });
-
-            }
-
-
-            // TOTAL DE JOGADORES
-
-            const totalJogadores = await sql`
-                SELECT COUNT(*)::integer AS total
-                FROM jogadores
-            `;
-
-
-            // TOTAL DE RESPOSTAS
-
-            const totalRespostas = await sql`
-                SELECT COUNT(*)::integer AS total
-                FROM respostas
-                WHERE pergunta_id = ${pergunta_id}
-            `;
-
-
-            return res.status(200).json({
-
-                sucesso: true,
-
-                totalJogadores:
-                    totalJogadores[0].total,
-
-                totalRespostas:
-                    totalRespostas[0].total
-
-            });
-
-        }
-
-
-        // =====================================================
-        // POST - RESPONDER
-        // =====================================================
-
-        if (req.method !== "POST") {
-
-            return res.status(405).json({
-                sucesso: false,
-                erro: "Método não permitido."
-            });
-
-        }
-
-
-        const {
-            jogador_id,
-            pergunta_id,
-            resposta
-        } = req.body;
-
-
-        if (
-            !jogador_id ||
-            !pergunta_id ||
-            !resposta
-        ) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Dados incompletos."
-            });
-
-        }
-
-
-        const alternativa =
-            String(resposta).toUpperCase();
-
-
-        if (
-            !["A", "B", "C", "D"]
-            .includes(alternativa)
-        ) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Alternativa inválida."
-            });
-
-        }
-
-
-        // =====================================================
-        // VERIFICAR JOGO
-        // =====================================================
-
-        const jogo = await sql`
-            SELECT *
-            FROM jogo
-            ORDER BY id DESC
-            LIMIT 1
-        `;
-
-
-        if (
-            !jogo.length ||
-            !jogo[0].pergunta_ativa
-        ) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Não há pergunta ativa."
-            });
-
-        }
-
-
-        if (
-            Number(jogo[0].pergunta_id) !==
-            Number(pergunta_id)
-        ) {
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Esta não é a pergunta atual."
-            });
-
-        }
-
-
-        // =====================================================
-        // VERIFICAR TEMPO
-        // =====================================================
-
-        const inicio =
-            new Date(jogo[0].tempo_inicio);
-
-        const agora =
-            new Date();
-
-        const segundos =
-            Math.floor(
-                (agora - inicio) / 1000
-            );
-
-
-        if(segundos >= 60){
-
-            await sql`
-                UPDATE jogo
-                SET
-                    pergunta_ativa = FALSE,
-                    tempo_restante = 0
-            `;
-
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Tempo encerrado."
-            });
-
-        }
-
-
-        // =====================================================
-        // VERIFICAR JOGADOR
-        // =====================================================
-
-        const jogador = await sql`
-            SELECT id, nome
-            FROM jogadores
-            WHERE id = ${jogador_id}
-            LIMIT 1
-        `;
-
-
-        if(!jogador.length){
-
-            return res.status(404).json({
-                sucesso: false,
-                erro: "Jogador não encontrado."
-            });
-
-        }
-
-
-        // =====================================================
-        // VERIFICAR SE JÁ RESPONDEU
-        // =====================================================
-
-        const jaRespondeu = await sql`
-            SELECT id
-            FROM respostas
-            WHERE jogador_id = ${jogador_id}
-              AND pergunta_id = ${pergunta_id}
-            LIMIT 1
-        `;
-
-
-        if(jaRespondeu.length){
-
-            return res.status(409).json({
-                sucesso: false,
-                erro: "Você já respondeu esta pergunta."
-            });
-
-        }
-
-
-        // =====================================================
-        // BUSCAR PERGUNTA
-        // =====================================================
-
-        const pergunta = await sql`
-            SELECT
-                resposta_correta,
-                dificuldade
-            FROM perguntas
-            WHERE id = ${pergunta_id}
-            LIMIT 1
-        `;
-
-
-        if(!pergunta.length){
-
-            return res.status(404).json({
-                sucesso: false,
-                erro: "Pergunta não encontrada."
-            });
-
-        }
-
-
-        // =====================================================
-        // CALCULAR PONTOS
-        // =====================================================
-
-        let pontos = 10;
-
-
-        if(
-            pergunta[0].dificuldade === "facil"
-        ){
-            pontos = 10;
-        }
-
-
-        if(
-            pergunta[0].dificuldade === "medio"
-        ){
-            pontos = 20;
-        }
-
-
-        if(
-            pergunta[0].dificuldade === "dificil"
-        ){
-            pontos = 30;
-        }
-
-
-        if(
-            pergunta[0].dificuldade === "desafio"
-        ){
-            pontos = 40;
-        }
-
-
-        const correta =
-            alternativa ===
-            pergunta[0].resposta_correta;
-
-
-        const pontosGanhos =
-            correta
-            ?
-            pontos
-            :
-            0;
-
-
-        // =====================================================
-        // REGISTRAR RESPOSTA
-        // =====================================================
-
-        await sql`
-            INSERT INTO respostas (
-                jogador_id,
-                pergunta_id,
-                resposta,
-                correta,
-                pontos
-            )
-            VALUES (
-                ${jogador_id},
-                ${pergunta_id},
-                ${alternativa},
-                ${correta},
-                ${pontosGanhos}
-            )
-        `;
-
-
-        // =====================================================
-        // ATUALIZAR PONTUAÇÃO
-        // =====================================================
-
-        if(pontosGanhos > 0){
-
-            await sql`
-                UPDATE jogadores
-                SET
-                    pontuacao =
-                    pontuacao +
-                    ${pontosGanhos}
-                WHERE id = ${jogador_id}
-            `;
-
-        }
-
-
-        // =====================================================
-        // CONTAR JOGADORES
-        // =====================================================
-
-        const totalJogadores = await sql`
-            SELECT COUNT(*)::integer AS total
-            FROM jogadores
-        `;
-
-
-        // =====================================================
-        // CONTAR RESPOSTAS
-        // =====================================================
-
-        const totalRespostas = await sql`
-            SELECT COUNT(*)::integer AS total
-            FROM respostas
-            WHERE pergunta_id = ${pergunta_id}
-        `;
-
-
-        const jogadores =
-            totalJogadores[0].total;
-
-        const respostas =
-            totalRespostas[0].total;
-
-
-        // =====================================================
-        // TODOS RESPONDERAM
-        // =====================================================
-
-        if(
-            jogadores > 0 &&
-            respostas >= jogadores
-        ){
-
-            await sql`
-                UPDATE jogo
-                SET
-                    pergunta_ativa = FALSE,
-                    tempo_restante = 0
-            `;
-
-        }
-
-
-        return res.status(200).json({
-
-            sucesso: true,
-
-            correta,
-
-            pontos: pontosGanhos,
-
-            totalJogadores: jogadores,
-
-            totalRespostas: respostas
-
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({
+      sucesso: false,
+      erro: "Método não permitido."
+    });
+  }
+
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+
+    // O painel consulta quantos jogadores já responderam.
+    if (req.method === "GET") {
+      const perguntaId = Number(req.query?.pergunta_id);
+
+      if (!Number.isSafeInteger(perguntaId) || perguntaId <= 0) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: "Pergunta inválida."
         });
+      }
 
+      const [jogadores, respostas] = await Promise.all([
+        sql`SELECT COUNT(*)::integer AS total FROM jogadores`,
+        sql`
+          SELECT COUNT(DISTINCT jogador_id)::integer AS total
+          FROM respostas
+          WHERE pergunta_id = ${perguntaId}
+        `
+      ]);
 
-    } catch(erro){
-
-        console.error(erro);
-
-        return res.status(500).json({
-
-            sucesso: false,
-
-            erro: erro.message
-
-        });
-
+      return res.status(200).json({
+        sucesso: true,
+        totalJogadores: jogadores[0].total,
+        totalRespostas: respostas[0].total
+      });
     }
 
+    // Confere os dados enviados pelo celular.
+    const jogadorId = Number(req.body?.jogador_id);
+    const perguntaId = Number(req.body?.pergunta_id);
+    const alternativa = String(req.body?.resposta ?? "")
+      .trim()
+      .toUpperCase();
+
+    if (
+      !Number.isSafeInteger(jogadorId) ||
+      jogadorId <= 0 ||
+      !Number.isSafeInteger(perguntaId) ||
+      perguntaId <= 0 ||
+      !["A", "B", "C", "D"].includes(alternativa)
+    ) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: "Dados da resposta inválidos."
+      });
+    }
+
+    // Verifica se a resposta já foi registrada.
+    const anterior = await sql`
+      SELECT id
+      FROM respostas
+      WHERE jogador_id = ${jogadorId}
+        AND pergunta_id = ${perguntaId}
+      LIMIT 1
+    `;
+
+    if (anterior.length) {
+      return res.status(409).json({
+        sucesso: false,
+        erro: "Você já respondeu esta pergunta."
+      });
+    }
+
+    // O PostgreSQL verifica:
+    // 1. Se o jogo está iniciado.
+    // 2. Se esta é a pergunta ativa.
+    // 3. Se ainda não passaram 60 segundos.
+    // 4. Se o jogador existe.
+    //
+    // A resposta e a pontuação são processadas
+    // no mesmo comando SQL.
+    const gravacao = await sql`
+      WITH jogo_atual AS (
+        SELECT id, pergunta_id
+        FROM jogo
+        WHERE iniciado = TRUE
+          AND pergunta_ativa = TRUE
+          AND encerrado = FALSE
+          AND pergunta_id = ${perguntaId}
+          AND tempo_inicio IS NOT NULL
+          AND NOW() >= tempo_inicio
+          AND NOW() < tempo_inicio + INTERVAL '60 seconds'
+        ORDER BY id DESC
+        LIMIT 1
+      ),
+
+      dados AS (
+        SELECT
+          j.id AS jogador_id,
+          p.id AS pergunta_id,
+          UPPER(TRIM(p.resposta_correta)) = ${alternativa} AS correta,
+          CASE p.dificuldade
+            WHEN 'facil' THEN 10
+            WHEN 'medio' THEN 20
+            WHEN 'dificil' THEN 30
+            WHEN 'desafio' THEN 40
+            ELSE 10
+          END AS valor
+        FROM jogadores j
+        JOIN perguntas p ON p.id = ${perguntaId}
+        JOIN jogo_atual g ON g.pergunta_id = p.id
+        WHERE j.id = ${jogadorId}
+      ),
+
+      inserida AS (
+        INSERT INTO respostas (
+          jogador_id,
+          pergunta_id,
+          resposta,
+          correta,
+          pontos
+        )
+        SELECT
+          jogador_id,
+          pergunta_id,
+          ${alternativa},
+          correta,
+          CASE WHEN correta THEN valor ELSE 0 END
+        FROM dados
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM respostas
+          WHERE jogador_id = ${jogadorId}
+            AND pergunta_id = ${perguntaId}
+        )
+        ON CONFLICT DO NOTHING
+        RETURNING correta, pontos
+      ),
+
+      somar_pontos AS (
+        UPDATE jogadores
+        SET pontuacao =
+          COALESCE(pontuacao, 0) +
+          (SELECT pontos FROM inserida)
+        WHERE id = ${jogadorId}
+          AND EXISTS (SELECT 1 FROM inserida)
+        RETURNING id
+      )
+
+      SELECT correta, pontos
+      FROM inserida
+    `;
+
+    // Se não gravou, verifica o motivo.
+    if (!gravacao.length) {
+      const duplicada = await sql`
+        SELECT id
+        FROM respostas
+        WHERE jogador_id = ${jogadorId}
+          AND pergunta_id = ${perguntaId}
+        LIMIT 1
+      `;
+
+      if (duplicada.length) {
+        return res.status(409).json({
+          sucesso: false,
+          erro: "Você já respondeu esta pergunta."
+        });
+      }
+
+      return res.status(400).json({
+        sucesso: false,
+        erro: "Pergunta encerrada, tempo esgotado ou jogador não encontrado."
+      });
+    }
+
+    // Conta os jogadores e as respostas registradas.
+    // COUNT DISTINCT evita contar o mesmo jogador duas vezes.
+    const [jogadores, respostas] = await Promise.all([
+      sql`SELECT COUNT(*)::integer AS total FROM jogadores`,
+      sql`
+        SELECT COUNT(DISTINCT jogador_id)::integer AS total
+        FROM respostas
+        WHERE pergunta_id = ${perguntaId}
+      `
+    ]);
+
+    const totalJogadores = jogadores[0].total;
+    const totalRespostas = respostas[0].total;
+
+    // Quando todos respondem, fecha somente a pergunta.
+    // O administrador continua podendo liberar a próxima.
+    if (
+      totalJogadores > 0 &&
+      totalRespostas >= totalJogadores
+    ) {
+      await sql`
+        UPDATE jogo
+        SET
+          pergunta_ativa = FALSE,
+          tempo_restante = 0
+        WHERE id = (
+          SELECT id
+          FROM jogo
+          ORDER BY id DESC
+          LIMIT 1
+        )
+          AND pergunta_id = ${perguntaId}
+          AND pergunta_ativa = TRUE
+      `;
+    }
+
+    // Devolve ao celular o resultado da resposta.
+    return res.status(200).json({
+      sucesso: true,
+      correta: gravacao[0].correta,
+      pontos: gravacao[0].pontos,
+      totalJogadores,
+      totalRespostas
+    });
+
+  } catch (erro) {
+    console.error("Erro em /api/responder:", erro);
+
+    return res.status(500).json({
+      sucesso: false,
+      erro: "Erro interno ao registrar a resposta."
+    });
+  }
 }
