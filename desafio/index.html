@@ -1,481 +1,265 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>📖 Desafio Bíblico</title>
-
 <style>
-
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:linear-gradient(135deg,#111827,#1e3a8a);
-color:#111827;
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:20px;
-}
-
-.container{
-width:100%;
-max-width:700px;
-background:white;
-border-radius:20px;
-padding:30px;
-box-shadow:0 15px 40px #0006;
-}
-
-h1{
-text-align:center;
-color:#1e3a8a;
-}
-
-.tela{
-display:none;
-}
-
-.tela.ativa{
-display:block;
-}
-
-input{
-width:100%;
-padding:15px;
-font-size:18px;
-border:2px solid #ddd;
-border-radius:10px;
-margin:15px 0;
-}
-
-button{
-width:100%;
-padding:15px;
-border:0;
-border-radius:10px;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-background:#1e3a8a;
-color:white;
-margin:5px 0;
-}
-
-button:disabled{
-opacity:.5;
-cursor:not-allowed;
-}
-
-.pergunta{
-font-size:25px;
-font-weight:bold;
-text-align:center;
-margin:25px 0;
-}
-
-.pontos{
-text-align:center;
-font-size:22px;
-font-weight:bold;
-color:#b45309;
-}
-
-.cronometro{
-text-align:center;
-font-size:48px;
-font-weight:bold;
-color:#dc2626;
-margin:15px;
-}
-
-.alternativa{
-background:#f3f4f6;
-color:#111827;
-border:2px solid #ddd;
-}
-
-.alternativa:hover{
-background:#dbeafe;
-}
-
-.mensagem{
-text-align:center;
-font-size:19px;
-margin:20px 0;
-}
-
-.ranking{
-margin-top:20px;
-}
-
-.ranking p{
-padding:12px;
-margin:6px 0;
-background:#f3f4f6;
-border-radius:10px;
-font-size:17px;
-}
-
-.meu-ranking{
-background:#dbeafe !important;
-border:2px solid #1e3a8a;
-font-weight:bold;
-}
-
-.destaque{
-text-align:center;
-font-size:24px;
-font-weight:bold;
-color:#1e3a8a;
-margin:20px 0;
-}
-
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(135deg,#111827,#1e3a8a); color: #111827; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+.container { width: 100%; max-width: 700px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 15px 40px #0006; }
+h1 { text-align: center; color: #1e3a8a; }
+.tela { display: none; }
+.tela.ativa { display: block; }
+input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 10px; margin: 15px 0; }
+button { width: 100%; padding: 15px; border: 0; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; background: #1e3a8a; color: white; margin: 5px 0; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.pergunta { font-size: 25px; font-weight: bold; text-align: center; margin: 25px 0; }
+.pontos { text-align: center; font-size: 22px; font-weight: bold; color: #b45309; }
+.cronometro { text-align: center; font-size: 48px; font-weight: bold; color: #dc2626; margin: 15px; }
+.alternativa { background: #f3f4f6; color: #111827; border: 2px solid #ddd; }
+.alternativa:hover { background: #dbeafe; }
+.mensagem { text-align: center; font-size: 19px; margin: 20px 0; }
+.ranking { margin-top: 20px; }
+.ranking p { padding: 12px; margin: 6px 0; background: #f3f4f6; border-radius: 10px; font-size: 17px; }
+.meu-ranking { background: #dbeafe !important; border: 2px solid #1e3a8a; font-weight: bold; }
+.destaque { text-align: center; font-size: 24px; font-weight: bold; color: #1e3a8a; margin: 20px 0; }
+#avisoConexao { display: none; text-align: center; background: #fff7ed; color: #9a3412; padding: 10px; border-radius: 10px; margin-bottom: 12px; }
 </style>
-
 </head>
-
 <body>
-
 <div class="container">
-
 <h1>📖 Desafio Bíblico</h1>
-<div id="avisoConexao" role="status" style="display:none;text-align:center;background:#fff7ed;color:#9a3412;padding:10px;border-radius:10px;margin-bottom:12px"></div>
+<div id="avisoConexao" role="status"></div>
 
-
-<!-- =====================================================
-     CADASTRO
-===================================================== -->
-
+<!-- Cadastro do jogador -->
 <div id="cadastro" class="tela ativa">
-
-<h2>Digite seu nome</h2>
-
-<input
-id="nome"
-maxlength="100"
-placeholder="Seu nome"
->
-
-<button onclick="entrar()">
-🎮 Entrar no Desafio Bíblico
-</button>
-
-<div
-id="mensagem"
-class="mensagem"
-></div>
-
+  <h2>Digite seu nome</h2>
+  <input id="nome" maxlength="100" placeholder="Seu nome">
+  <button onclick="entrar()">🎮 Entrar no Desafio Bíblico</button>
+  <div id="mensagem" class="mensagem"></div>
 </div>
 
-
-<!-- =====================================================
-     AGUARDANDO
-===================================================== -->
-
+<!-- Espera pela próxima pergunta -->
 <div id="aguardando" class="tela">
-
-<h2>⏳ Aguardando</h2>
-
-<p class="mensagem">
-Você está inscrito no Desafio Bíblico.
-</p>
-
-<p class="mensagem">
-Aguarde o administrador liberar a próxima pergunta.
-</p>
-
+  <h2>⏳ Aguardando</h2>
+  <p class="mensagem">Você está inscrito no Desafio Bíblico.</p>
+  <p class="mensagem">Aguarde o administrador liberar a próxima pergunta.</p>
 </div>
 
-
-<!-- =====================================================
-     PERGUNTA
-===================================================== -->
-
+<!-- Pergunta e cronômetro -->
 <div id="pergunta" class="tela">
-
-<div
-class="pontos"
-id="pontos"
-></div>
-
-<div
-class="cronometro"
-id="tempo"
->
-60
+  <div class="pontos" id="pontos"></div>
+  <div class="cronometro" id="tempo">60</div>
+  <div class="pergunta" id="texto"></div>
+  <button class="alternativa" id="A" onclick="responder('A')"></button>
+  <button class="alternativa" id="B" onclick="responder('B')"></button>
+  <button class="alternativa" id="C" onclick="responder('C')"></button>
+  <button class="alternativa" id="D" onclick="responder('D')"></button>
+  <div id="resultado" class="mensagem"></div>
 </div>
 
-<div
-class="pergunta"
-id="texto"
-></div>
-
-<button
-class="alternativa"
-id="A"
-onclick="responder('A')"
-></button>
-
-<button
-class="alternativa"
-id="B"
-onclick="responder('B')"
-></button>
-
-<button
-class="alternativa"
-id="C"
-onclick="responder('C')"
-></button>
-
-<button
-class="alternativa"
-id="D"
-onclick="responder('D')"
-></button>
-
-<div
-id="resultado"
-class="mensagem"
-></div>
-
+<!-- Ranking entre perguntas -->
+<div id="rankingTela" class="tela">
+  <h2>🏆 Ranking</h2>
+  <div class="destaque" id="minhaPosicao"></div>
+  <p class="mensagem">A pergunta foi encerrada.</p>
+  <p class="mensagem">Aguarde o administrador liberar a próxima pergunta.</p>
+  <div class="ranking" id="rankingLista">Carregando ranking...</div>
 </div>
 
-
-<!-- =====================================================
-     RANKING ENTRE PERGUNTAS
-===================================================== -->
-
-<div
-id="rankingTela"
-class="tela"
->
-
-<h2>🏆 Ranking</h2>
-
-<div
-class="destaque"
-id="minhaPosicao"
-></div>
-
-<p class="mensagem">
-A pergunta foi encerrada.
-</p>
-
-<p class="mensagem">
-Aguarde o administrador liberar a próxima pergunta.
-</p>
-
-<div
-class="ranking"
-id="rankingLista"
->
-Carregando ranking...
+<!-- Ranking final -->
+<div id="final" class="tela">
+  <h2>🏆 Resultado Final</h2>
+  <p class="mensagem">A partida terminou!</p>
+  <div class="destaque" id="minhaPosicaoFinal"></div>
+  <div class="ranking" id="rankingFinal">Carregando ranking...</div>
 </div>
-
 </div>
-
-
-<!-- =====================================================
-     FINAL
-===================================================== -->
-
-<div
-id="final"
-class="tela"
->
-
-<h2>🏆 Resultado Final</h2>
-
-<p class="mensagem">
-A partida terminou!
-</p>
-
-<div
-class="destaque"
-id="minhaPosicaoFinal"
-></div>
-
-<div
-class="ranking"
-id="rankingFinal"
->
-Carregando ranking...
-</div>
-
-</div>
-
-</div>
-
 
 <script>
+// =====================================================
+// DESAFIO BÍBLICO - CELULAR DO JOGADOR
+// =====================================================
+// Mantém as perguntas, o cronômetro e o ranking.
+// Adiciona token secreto e mensagem persistente de banimento.
 
-// =====================================================
-// VARIÁVEIS / SINCRONIZAÇÃO
-// =====================================================
+const CHAVE_TOKEN = "desafioToken";
+const CHAVE_BANIMENTO = "desafioBanido";
+const CHAVE_JOGADOR = "desafioJogador";
 let jogadorId = null;
+let jogadorToken = null;
 let perguntaId = null;
-let perguntaNumero = 0;
 let respondida = false;
 let enviandoResposta = false;
-let ultimaPergunta = null;
 let ultimaRodada = null;
 let timer = null;
 let fimDaPergunta = 0;
 let verificacaoAgendada = null;
 let verificacaoEmCurso = false;
 
-// Mostra uma mensagem de conexão sem esconder as perguntas.
+// Mostra avisos sem esconder a pergunta.
 function avisoConexao(mensagem) {
-    const aviso = document.getElementById("avisoConexao");
-    aviso.innerText = mensagem;
-    aviso.style.display = mensagem ? "block" : "none";
+    const elemento = document.getElementById("avisoConexao");
+    elemento.textContent = mensagem;
+    elemento.style.display = mensagem ? "block" : "none";
 }
 
-// Agenda uma única verificação por vez; evita consultas simultâneas.
+// Exibe apenas uma tela por vez.
+function tela(nome) {
+    document.querySelectorAll(".tela").forEach(x => x.classList.remove("ativa"));
+    document.getElementById(nome)?.classList.add("ativa");
+}
+
+// Impede verificações simultâneas.
 function agendarVerificacao(atraso = 1000) {
     clearTimeout(verificacaoAgendada);
     verificacaoAgendada = setTimeout(verificar, atraso);
 }
 
-// =====================================================
-// TROCAR TELA
-// =====================================================
-
-function tela(nome){
-
-    document
-    .querySelectorAll(".tela")
-    .forEach(x => {
-
-        x.classList.remove("ativa");
-
-    });
-
-    const elemento =
-        document.getElementById(nome);
-
-    if(elemento){
-
-        elemento.classList.add("ativa");
-
-    }
-
+// Cria 32 bytes aleatórios (64 caracteres hexadecimais).
+// A identificação fica no navegador; o servidor armazena só o hash.
+function obterToken() {
+    const salvo = localStorage.getItem(CHAVE_TOKEN);
+    if (salvo && /^[a-f0-9]{64}$/i.test(salvo)) return salvo;
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+    localStorage.setItem(CHAVE_TOKEN, token);
+    return token;
 }
 
+// Bloqueia os botões de resposta.
+function bloquear() {
+    ["A", "B", "C", "D"].forEach(id => {
+        document.getElementById(id).disabled = true;
+    });
+}
+
+// Habilita os botões da nova pergunta.
+function ativar() {
+    ["A", "B", "C", "D"].forEach(id => {
+        document.getElementById(id).disabled = false;
+    });
+}
 
 // =====================================================
-// ENTRAR NO JOGO
+// BANIMENTO PERSISTENTE
 // =====================================================
+// Mesmo após atualizar a página, mostra o banimento.
+// O botão permite tentar entrar quando uma nova partida começar.
+function mostrarBanimento(nome) {
+    localStorage.setItem(CHAVE_BANIMENTO, JSON.stringify({ nome }));
+    sessionStorage.removeItem(CHAVE_JOGADOR);
+    jogadorId = null;
+    jogadorToken = null;
+    perguntaId = null;
+    clearInterval(timer);
+    clearTimeout(verificacaoAgendada);
+    bloquear();
 
-async function entrar(){
+    const conteudo = document.querySelector(".container");
+    const titulo = document.createElement("h1");
+    titulo.textContent = "🚫 Você foi banido do Desafio Bíblico";
+    const mensagem = document.createElement("p");
+    mensagem.className = "mensagem";
+    mensagem.textContent = "Sua participação foi encerrada pelo administrador.";
+    const botao = document.createElement("button");
+    botao.textContent = "🔄 Tentar participar de uma nova partida";
+    const aviso = document.createElement("p");
+    aviso.className = "mensagem";
+
+    // Só remove o aviso quando o servidor permitir novo cadastro.
+    botao.onclick = async () => {
+        botao.disabled = true;
+        aviso.textContent = "Verificando se já é possível participar...";
+        try {
+            const resposta = await fetch("/api/jogadores", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                cache: "no-store",
+                body: JSON.stringify({ nome, token: obterToken() })
+            });
+            const dados = await resposta.json();
+            if (!resposta.ok || !dados.sucesso || !dados.jogador?.id) {
+                aviso.textContent = dados.erro || "Ainda não é possível participar.";
+                return;
+            }
+            localStorage.removeItem(CHAVE_BANIMENTO);
+            sessionStorage.setItem(CHAVE_JOGADOR, JSON.stringify({
+                id: dados.jogador.id, nome, token: obterToken()
+            }));
+            location.reload();
+        } catch (erro) {
+            aviso.textContent = "Falha de conexão. Tente novamente.";
+        } finally {
+            botao.disabled = false;
+        }
+    };
+    conteudo.replaceChildren(titulo, mensagem, botao, aviso);
+}
+
+// =====================================================
+// CADASTRAR JOGADOR
+// =====================================================
+async function entrar() {
     const nome = document.getElementById("nome").value.trim();
+    const mensagem = document.getElementById("mensagem");
     if (!nome) {
-        document.getElementById("mensagem").innerText = "Digite seu nome.";
+        mensagem.textContent = "Digite seu nome.";
         return;
     }
-
     try {
-        const r = await fetch("/api/jogadores", {
+        // O mesmo token identifica o navegador durante a partida.
+        const token = obterToken();
+        const resposta = await fetch("/api/jogadores", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome })
+            cache: "no-store",
+            body: JSON.stringify({ nome, token })
         });
-        const d = await r.json();
-        if (!r.ok || !d.sucesso || !d.jogador?.id) {
-            document.getElementById("mensagem").innerText = d.erro || "Erro ao entrar.";
+        const dados = await resposta.json();
+        if (resposta.status === 403 && dados.banido) {
+            mostrarBanimento(nome);
             return;
         }
-
-        jogadorId = d.jogador.id;
-        // Mantém este jogador ao atualizar a aba; não é uma autenticação.
-        sessionStorage.setItem("desafioJogador", JSON.stringify({ id: jogadorId, nome }));
+        if (!resposta.ok || !dados.sucesso || !dados.jogador?.id) {
+            mensagem.textContent = dados.erro || "Erro ao entrar.";
+            return;
+        }
+        jogadorId = Number(dados.jogador.id);
+        jogadorToken = token;
+        sessionStorage.setItem(CHAVE_JOGADOR, JSON.stringify({
+            id: jogadorId, nome, token
+        }));
+        localStorage.removeItem(CHAVE_BANIMENTO);
         tela("aguardando");
         avisoConexao("");
         agendarVerificacao(0);
-    } catch (e) {
-        console.error("Falha ao cadastrar jogador:", e);
-        document.getElementById("mensagem").innerText =
-            "Falha de conexão. Tente entrar novamente.";
+    } catch (erro) {
+        console.error("Falha ao cadastrar jogador:", erro);
+        mensagem.textContent = "Falha de conexão. Tente entrar novamente.";
     }
 }
 
 // =====================================================
-// VERIFICAR ESTADO DO JOGO
+// VERIFICAR O ESTADO DO JOGO
 // =====================================================
-
-async function verificar(){
-    // Uma única consulta por rodada, mesmo com conexões lentas.
+async function verificar() {
     if (!jogadorId || verificacaoEmCurso) return;
     verificacaoEmCurso = true;
-
     try {
-        const r = await fetch("/api/jogo?_=" + Date.now(), { cache: "no-store" });
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        const d = await r.json();
-        if (!d.sucesso || !d.jogo) throw new Error(d.erro || "Estado indisponível");
+        const resposta = await fetch("/api/jogo?_=" + Date.now(), { cache: "no-store" });
+        if (!resposta.ok) throw new Error("Falha ao consultar o jogo.");
+        const dados = await resposta.json();
+        if (!dados.sucesso || !dados.jogo) throw new Error("Jogo indisponível.");
         avisoConexao("");
-        const jogo = d.jogo;
+        const jogo = dados.jogo;
 
-         
-        // Verifica se o jogador continua cadastrado.
-        // Não confunde a limpeza de uma partida encerrada
-        // com a remoção individual de um participante.
-        if (!jogo.encerrado) {
-            const respostaJogadores = await fetch(
-                "/api/jogadores?_=" + Date.now(),
-                { cache: "no-store" }
-            );
-
-            if (!respostaJogadores.ok) {
-                throw new Error("Falha ao consultar jogadores.");
-            }
-
-            const dadosJogadores = await respostaJogadores.json();
-
-            if (!dadosJogadores.sucesso) {
-                throw new Error("Lista de jogadores indisponível.");
-            }
-
-            // Confere o ID, pois nomes podem ser parecidos.
-            const aindaCadastrado = dadosJogadores.jogadores.some(
-                jogador => Number(jogador.id) === Number(jogadorId)
-            );
-
-            if (!aindaCadastrado) {
-                // Interrompe a participação no celular removido.
-                clearInterval(timer);
-                bloquear();
-                sessionStorage.removeItem("desafioJogador");
-                jogadorId = null;
-
-                // Substitui o ranking pela mensagem de banimento.
-                const conteudo = document.querySelector(".container");
-
-                const titulo = document.createElement("h1");
-                titulo.textContent = "🚫 Você foi banido do Desafio Bíblico";
-
-                const mensagem = document.createElement("p");
-                mensagem.className = "mensagem";
-                mensagem.textContent =
-                    "Sua participação foi encerrada pelo administrador.";
-
-                conteudo.replaceChildren(titulo, mensagem);
-                return;
-            }
-        }
-
-
+        // A limpeza geral de uma partida encerrada não é banimento.
         if (jogo.encerrado) {
+            sessionStorage.setItem("desafioViuEncerramento", "1");
             clearInterval(timer);
             bloquear();
             perguntaId = null;
@@ -484,22 +268,44 @@ async function verificar(){
             return;
         }
 
+        // Confere se o administrador removeu este jogador.
+        const lista = await fetch("/api/jogadores?_=" + Date.now(), { cache: "no-store" });
+        if (!lista.ok) throw new Error("Falha ao consultar jogadores.");
+        const dadosLista = await lista.json();
+        if (!dadosLista.sucesso) throw new Error("Lista indisponível.");
+        const cadastrado = dadosLista.jogadores.some(j => Number(j.id) === jogadorId);
+        if (!cadastrado) {
+            // Se a partida anterior foi encerrada e limpa,
+            // volta ao cadastro em vez de exibir banimento.
+            if (sessionStorage.getItem("desafioViuEncerramento") === "1") {
+                sessionStorage.removeItem(CHAVE_JOGADOR);
+                sessionStorage.removeItem("desafioViuEncerramento");
+                jogadorId = null;
+                clearInterval(timer);
+                clearTimeout(verificacaoAgendada);
+                tela("cadastro");
+                return;
+            }
+            const salvo = JSON.parse(sessionStorage.getItem(CHAVE_JOGADOR) || "null");
+            mostrarBanimento(salvo?.nome || document.getElementById("nome").value.trim());
+            return;
+        }
+        sessionStorage.removeItem("desafioViuEncerramento");
+
+        // A pergunta só é carregada quando a rodada muda.
         if (jogo.pergunta_ativa === true && jogo.pergunta) {
-            // A rodada leva em conta ID, número e início: mesma pergunta em
-            // outra partida deve aparecer normalmente.
             const rodada = [jogo.pergunta.id, jogo.numero_pergunta, jogo.tempo_inicio].join("|");
             if (ultimaRodada !== rodada) {
                 carregar(jogo);
                 ultimaRodada = rodada;
-            } else if (!respondida && document.getElementById("pergunta").classList.contains("ativa") === false) {
-                // Recupera a tela caso ela tenha ficado no ranking após instabilidade.
+            } else if (!respondida && !document.getElementById("pergunta").classList.contains("ativa")) {
                 tela("pergunta");
             }
             return;
         }
 
-        if (jogo.iniciado === true && jogo.pergunta_ativa === false &&
-            Number(jogo.numero_pergunta || 0) > 0) {
+        // Ranking entre as perguntas.
+        if (jogo.iniciado && !jogo.pergunta_ativa && Number(jogo.numero_pergunta || 0) > 0) {
             clearInterval(timer);
             bloquear();
             perguntaId = null;
@@ -507,11 +313,10 @@ async function verificar(){
             tela("rankingTela");
             return;
         }
-
         tela("aguardando");
-    } catch (e) {
-        console.error("Falha ao atualizar jogo:", e);
-        avisoConexao("⚠️ Conexão instável. Tentando atualizar a pergunta automaticamente...");
+    } catch (erro) {
+        console.error("Falha ao atualizar jogo:", erro);
+        avisoConexao("⚠️ Conexão instável. Tentando atualizar automaticamente...");
     } finally {
         verificacaoEmCurso = false;
         if (jogadorId) agendarVerificacao(1000);
@@ -519,212 +324,86 @@ async function verificar(){
 }
 
 // =====================================================
-// CARREGAR PERGUNTA
+// MOSTRAR PERGUNTA
 // =====================================================
-
-function carregar(jogo){
-
-    ultimaPergunta =
-        jogo.pergunta.id;
-
-    perguntaId =
-        jogo.pergunta.id;
-
-    perguntaNumero =
-        jogo.numero_pergunta;
-
+function carregar(jogo) {
+    perguntaId = jogo.pergunta.id;
     respondida = false;
     enviandoResposta = false;
-
-    document
-    .getElementById("texto")
-    .innerText =
-        jogo.pergunta.pergunta;
-
-
-    document
-    .getElementById("A")
-    .innerText =
-        "A) " +
-        jogo.pergunta.alternativa_a;
-
-
-    document
-    .getElementById("B")
-    .innerText =
-        "B) " +
-        jogo.pergunta.alternativa_b;
-
-
-    document
-    .getElementById("C")
-    .innerText =
-        "C) " +
-        jogo.pergunta.alternativa_c;
-
-
-    document
-    .getElementById("D")
-    .innerText =
-        "D) " +
-        jogo.pergunta.alternativa_d;
-
-
-    document
-    .getElementById("pontos")
-    .innerText =
-        "💰 " +
-        jogo.pergunta.pontos +
-        " pontos";
-
-
-    document
-    .getElementById("resultado")
-    .innerText = "";
-
-
+    document.getElementById("texto").textContent = jogo.pergunta.pergunta;
+    ["A", "B", "C", "D"].forEach(letra => {
+        document.getElementById(letra).textContent =
+            letra + ") " + jogo.pergunta["alternativa_" + letra.toLowerCase()];
+    });
+    document.getElementById("pontos").textContent = "💰 " + jogo.pergunta.pontos + " pontos";
+    document.getElementById("resultado").textContent = "";
     ativar();
-
-
     tela("pergunta");
-
-
-    iniciarCronometro(
-        jogo.tempo_inicio
-    );
-
+    iniciarCronometro(jogo.tempo_inicio);
 }
 
-
-// =====================================================
-// CRONÔMETRO
-// =====================================================
-
-function iniciarCronometro(inicio){
-
+// O horário do servidor determina o fim dos 60 segundos.
+function iniciarCronometro(inicio) {
     clearInterval(timer);
-
-
-    if(!inicio){
-
-        document
-        .getElementById("tempo")
-        .innerText = 60;
-
-        return;
-    }
-
-
-    const inicioData =
-        new Date(inicio)
-        .getTime();
-
-
-    fimDaPergunta =
-        inicioData + 60000;
-
-
-    function atualizar(){
-
-        const restante =
-            Math.max(
-                0,
-                Math.ceil(
-                    (
-                        fimDaPergunta -
-                        Date.now()
-                    ) / 1000
-                )
-            );
-
-
-        document
-        .getElementById("tempo")
-        .innerText =
-            restante;
-
-
-        if(restante <= 0){
-
+    fimDaPergunta = inicio ? new Date(inicio).getTime() + 60000 : Date.now();
+    function atualizar() {
+        const restante = Math.max(0, Math.ceil((fimDaPergunta - Date.now()) / 1000));
+        document.getElementById("tempo").textContent = restante;
+        if (restante <= 0) {
             clearInterval(timer);
-
             bloquear();
-
-
-            document
-            .getElementById("resultado")
-            .innerText =
-                "⏰ Tempo encerrado.";
-
+            if (!respondida) document.getElementById("resultado").textContent = "⏰ Tempo encerrado.";
         }
-
     }
-
-
     atualizar();
-
-
-    timer =
-        setInterval(
-            atualizar,
-            250
-        );
-
+    timer = setInterval(atualizar, 250);
 }
 
-
 // =====================================================
-// RESPONDER
+// ENVIAR RESPOSTA COM TOKEN SECRETO
 // =====================================================
-
-async function responder(alternativa){
+async function responder(alternativa) {
     if (respondida || enviandoResposta || !perguntaId) return;
-    // Impede respostas fora do tempo mostrado no celular.
-    if (fimDaPergunta && Date.now() >= fimDaPergunta) {
+    if (Date.now() >= fimDaPergunta) {
         bloquear();
-        document.getElementById("resultado").innerText = "⏰ Tempo encerrado.";
+        document.getElementById("resultado").textContent = "⏰ Tempo encerrado.";
         return;
     }
-
     enviandoResposta = true;
     bloquear();
     const perguntaEnviada = perguntaId;
-
     try {
-        const r = await fetch("/api/responder", {
+        const resposta = await fetch("/api/responder", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            cache: "no-store",
             body: JSON.stringify({
                 jogador_id: jogadorId,
                 pergunta_id: perguntaEnviada,
-                resposta: alternativa
+                resposta: alternativa,
+                token: jogadorToken // Confere a identidade no servidor.
             })
         });
-        const d = await r.json();
-
-        // Uma requisição pode ter sido gravada mesmo se o retorno anterior falhou.
-        if (r.status === 409) {
+        const dados = await resposta.json();
+        if (resposta.status === 409) {
             respondida = true;
             clearInterval(timer);
-            document.getElementById("resultado").innerText = "✅ Sua resposta já foi registrada.";
+            document.getElementById("resultado").textContent = "✅ Sua resposta já foi registrada.";
             return;
         }
-        if (!r.ok || !d.sucesso) {
-            // Só permite nova tentativa se a pergunta continuar ativa e no prazo.
-            document.getElementById("resultado").innerText = d.erro || "Falha ao enviar resposta.";
-            if (perguntaId === perguntaEnviada && Date.now() < fimDaPergunta) ativar();
+        if (!resposta.ok || !dados.sucesso) {
+            document.getElementById("resultado").textContent = dados.erro || "Falha ao enviar resposta.";
+            if (resposta.status !== 403 && perguntaId === perguntaEnviada && Date.now() < fimDaPergunta) ativar();
             return;
         }
-
         respondida = true;
         clearInterval(timer);
-        document.getElementById("resultado").innerText = d.correta
-            ? "✅ Correta! +" + d.pontos + " pontos"
+        document.getElementById("resultado").textContent = dados.correta
+            ? "✅ Correta! +" + dados.pontos + " pontos"
             : "❌ Resposta incorreta.";
-    } catch (e) {
-        console.error("Falha ao responder:", e);
-        document.getElementById("resultado").innerText =
-            "⚠️ Conexão falhou. Se ainda houver tempo, toque novamente para confirmar.";
+    } catch (erro) {
+        console.error("Falha ao responder:", erro);
+        document.getElementById("resultado").textContent = "⚠️ Conexão falhou. Se houver tempo, tente novamente.";
         if (perguntaId === perguntaEnviada && Date.now() < fimDaPergunta) ativar();
     } finally {
         enviandoResposta = false;
@@ -732,314 +411,82 @@ async function responder(alternativa){
 }
 
 // =====================================================
-// BLOQUEAR ALTERNATIVAS
+// RANKING SEGURO COM MEDALHAS
 // =====================================================
-
-function bloquear(){
-
-    ["A","B","C","D"]
-    .forEach(x => {
-
-        document
-        .getElementById(x)
-        .disabled = true;
-
-    });
-
-}
-
-
-// =====================================================
-// ATIVAR ALTERNATIVAS
-// =====================================================
-
-function ativar(){
-
-    ["A","B","C","D"]
-    .forEach(x => {
-
-        document
-        .getElementById(x)
-        .disabled = false;
-
-    });
-
-}
-
-
-// =====================================================
-// RANKING ENTRE PERGUNTAS
-// =====================================================
-
-async function carregarRanking(){
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/ranking?_=" +
-                Date.now()
-            );
-
-
-        const d =
-            await r.json();
-
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-
-        const ranking =
-            d.ranking || [];
-
-
-        const lista =
-            document
-            .getElementById(
-                "rankingLista"
-            );
-
-
-        if(ranking.length === 0){
-
-            lista.innerHTML =
-                "<p>Nenhum jogador.</p>";
-
-            return;
-        }
-
-
-        let minhaPosicao = "";
-
-
-        lista.innerHTML =
-
-            ranking
-            .map((j,i)=>{
-
-                const souEu =
-                    Number(j.id) ===
-                    Number(jogadorId);
-
-
-                if(souEu){
-
-                    minhaPosicao =
-                        "🏅 Você está em " +
-                        (i + 1) +
-                        "º lugar com " +
-                        j.pontuacao +
-                        " pontos";
-
-                }
-
-
-                return `
-
-                    <p class="${
-                        souEu
-                        ?
-                        "meu-ranking"
-                        :
-                        ""
-                    }">
-
-                        <b>
-                            ${i + 1}º
-                        </b>
-
-                        —
-
-                        ${j.nome}
-
-                        —
-
-                        <b>
-                            ${j.pontuacao}
-                            pontos
-                        </b>
-
-                        ${
-                            souEu
-                            ?
-                            " 👈 VOCÊ"
-                            :
-                            ""
-                        }
-
-                    </p>
-
-                `;
-
-            })
-            .join("");
-
-
-        document
-        .getElementById(
-            "minhaPosicao"
-        )
-        .innerText =
-            minhaPosicao;
-
-
-    }catch(e){
-
-        console.error(e);
-
+// textContent impede executar HTML contido no nome.
+function desenharRanking(id, ranking) {
+    const destino = document.getElementById(id);
+    destino.replaceChildren();
+    if (!ranking.length) {
+        const vazio = document.createElement("p");
+        vazio.textContent = "Nenhum jogador.";
+        destino.appendChild(vazio);
+        return "";
     }
-
+    let minhaPosicao = "";
+    ranking.forEach((jogador, indice) => {
+        const souEu = Number(jogador.id) === jogadorId;
+        const medalha = ["🥇", "🥈", "🥉"][indice] || (indice + 1) + "º";
+        const linha = document.createElement("p");
+        if (souEu) linha.className = "meu-ranking";
+        linha.textContent = medalha + " — " + jogador.nome + " — " +
+            jogador.pontuacao + " pontos" + (souEu ? " 👈 VOCÊ" : "");
+        destino.appendChild(linha);
+        if (souEu) minhaPosicao = (indice + 1) + "º lugar com " + jogador.pontuacao + " pontos";
+    });
+    return minhaPosicao;
 }
 
+// Busca a classificação atual.
+async function obterRanking() {
+    const resposta = await fetch("/api/ranking?_=" + Date.now(), { cache: "no-store" });
+    if (!resposta.ok) throw new Error("Falha ao carregar ranking.");
+    const dados = await resposta.json();
+    if (!dados.sucesso) throw new Error("Ranking indisponível.");
+    return dados.ranking || [];
+}
 
-// =====================================================
-// RANKING FINAL
-// =====================================================
-
-async function carregarRankingFinal(){
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/ranking?_=" +
-                Date.now()
-            );
-
-
-        const d =
-            await r.json();
-
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-
-        const ranking =
-            d.ranking || [];
-
-
-        let minhaPosicaoFinal = "";
-
-
-        document
-        .getElementById(
-            "rankingFinal"
-        )
-        .innerHTML =
-
-            ranking.length
-
-            ?
-
-            ranking
-            .map((j,i)=>{
-
-                const souEu =
-                    Number(j.id) ===
-                    Number(jogadorId);
-
-
-                if(souEu){
-
-                    minhaPosicaoFinal =
-                        "🏆 Você ficou em " +
-                        (i + 1) +
-                        "º lugar!";
-
-                }
-
-
-                return `
-
-                    <p class="${
-                        souEu
-                        ?
-                        "meu-ranking"
-                        :
-                        ""
-                    }">
-
-                        <b>
-                            ${
-                                i === 0
-                                ? "🥇"
-                                : i === 1
-                                ? "🥈"
-                                : i === 2
-                                ? "🥉"
-                                : (i + 1) + "º"
-                            }
-                        </b>
-
-                        —
-
-                        ${j.nome}
-
-                        —
-
-                        <b>
-                            ${j.pontuacao}
-                            pontos
-                        </b>
-
-                        ${
-                            souEu
-                            ?
-                            " 👈 VOCÊ"
-                            :
-                            ""
-                        }
-
-                    </p>
-
-                `;
-
-            })
-            .join("")
-
-            :
-
-            "<p>Nenhum jogador.</p>";
-
-
-        document
-        .getElementById(
-            "minhaPosicaoFinal"
-        )
-        .innerText =
-            minhaPosicaoFinal;
-
-
-    }catch(e){
-
-        console.error(e);
-
+async function carregarRanking() {
+    try {
+        const posicao = desenharRanking("rankingLista", await obterRanking());
+        document.getElementById("minhaPosicao").textContent = posicao ? "🏅 Você está em " + posicao : "";
+    } catch (erro) {
+        console.error("Erro no ranking:", erro);
     }
-
 }
 
-// Recupera a inscrição ao atualizar a aba durante uma partida.
-// A identidade ainda precisa ser reforçada no servidor em etapa posterior.
+async function carregarRankingFinal() {
+    try {
+        const posicao = desenharRanking("rankingFinal", await obterRanking());
+        document.getElementById("minhaPosicaoFinal").textContent = posicao ? "🏆 Você ficou em " + posicao + "!" : "";
+    } catch (erro) {
+        console.error("Erro no ranking final:", erro);
+    }
+}
+
+// =====================================================
+// RESTAURAR SESSÃO APÓS ATUALIZAR A PÁGINA
+// =====================================================
 try {
-    const salvo = JSON.parse(sessionStorage.getItem("desafioJogador") || "null");
-    if (salvo && Number(salvo.id) > 0) {
-        jogadorId = Number(salvo.id);
-        document.getElementById("nome").value = salvo.nome || "";
-        tela("aguardando");
-        agendarVerificacao(0);
+    const banido = JSON.parse(localStorage.getItem(CHAVE_BANIMENTO) || "null");
+    if (banido?.nome) {
+        mostrarBanimento(banido.nome);
+    } else {
+        const salvo = JSON.parse(sessionStorage.getItem(CHAVE_JOGADOR) || "null");
+        if (salvo && Number(salvo.id) > 0) {
+            jogadorId = Number(salvo.id);
+            // Cadastros antigos sem token continuam compatíveis
+            // temporariamente, até serem recadastrados.
+            jogadorToken = salvo.token || null;
+            document.getElementById("nome").value = salvo.nome || "";
+            tela("aguardando");
+            agendarVerificacao(0);
+        }
     }
-} catch (e) {
-    sessionStorage.removeItem("desafioJogador");
+} catch (erro) {
+    console.error("Falha ao restaurar sessão:", erro);
+    sessionStorage.removeItem(CHAVE_JOGADOR);
 }
-
 </script>
-
 </body>
-
 </html>
