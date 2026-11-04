@@ -6,14 +6,20 @@ import { createHash, timingSafeEqual } from "node:crypto";
 // DESAFIO BÍBLICO - CONTROLE DO JOGO
 // =====================================================
 // GET: consulta pública do estado da partida.
-// POST: comandos exclusivos do administrador.
-// A senha é conferida no servidor, nunca exposta no HTML.
+// POST: comandos protegidos por senha.
+//
+// MELHORIA:
+// Cada pergunta utilizada é registrada no Neon.
+// Uma pergunta não se repete na mesma partida,
+// mesmo quando nenhum jogador responder.
 // =====================================================
 
-// Compara duas senhas de forma resistente a ataques de tempo.
-// Os hashes têm sempre o mesmo tamanho.
+// Compara senhas com segurança.
 function senhaValida(recebida, configurada) {
-    if (typeof recebida !== "string" || recebida.length > 1024) {
+    if (
+        typeof recebida !== "string" ||
+        recebida.length > 1024
+    ) {
         return false;
     }
 
@@ -30,13 +36,13 @@ function senhaValida(recebida, configurada) {
 
 export default async function handler(req, res) {
 
-    // Impede que o navegador reutilize informações antigas.
+    // Impede que o navegador reutilize dados antigos.
     res.setHeader(
         "Cache-Control",
         "no-store, no-cache, must-revalidate"
     );
 
-    // Somente GET e POST são permitidos.
+    // Aceita somente GET e POST.
     if (req.method !== "GET" && req.method !== "POST") {
         return res.status(405).json({
             sucesso: false,
@@ -45,19 +51,15 @@ export default async function handler(req, res) {
     }
 
     // =================================================
-    // PROTEÇÃO DOS COMANDOS ADMINISTRATIVOS
+    // SEGURANÇA DO ADMINISTRADOR
     // =================================================
-    // GET permanece público para os jogadores.
-    // POST exige a senha configurada na Vercel.
 
     if (req.method === "POST") {
 
-        // Lê a senha secreta armazenada na Vercel.
+        // Senha armazenada nas variáveis da Vercel.
         const senhaConfigurada =
             process.env.DESAFIO_ADMIN_PASSWORD;
 
-        // Se a senha não estiver configurada,
-        // nenhum comando administrativo será executado.
         if (!senhaConfigurada) {
             return res.status(503).json({
                 sucesso: false,
@@ -65,11 +67,10 @@ export default async function handler(req, res) {
             });
         }
 
-        // Recebe a senha enviada pelo painel administrativo.
+        // Senha recebida pelo painel administrativo.
         const senhaRecebida =
             req.headers["x-admin-password"];
 
-        // Bloqueia comandos com senha incorreta.
         if (!senhaValida(senhaRecebida, senhaConfigurada)) {
             return res.status(401).json({
                 sucesso: false,
@@ -79,7 +80,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Conecta ao banco de dados Neon.
+
+        // Conexão com o banco de dados Neon.
         const sql = neon(process.env.DATABASE_URL);
 
         // =================================================
@@ -109,8 +111,7 @@ export default async function handler(req, res) {
 
             const estado = jogos[0];
 
-            // Calcula o tempo com base no servidor.
-            // Não depende do relógio do administrador.
+            // Calcula os segundos restantes pelo servidor.
             let restante = 0;
 
             if (
@@ -157,7 +158,6 @@ export default async function handler(req, res) {
 
                     const p = resultado[0];
 
-                    // Pontuação de cada dificuldade.
                     const valores = {
                         facil: 10,
                         medio: 20,
@@ -186,7 +186,6 @@ export default async function handler(req, res) {
         // =================================================
         // POST - COMANDOS DO ADMINISTRADOR
         // =================================================
-        // A senha já foi validada antes de chegar aqui.
 
         const { acao } = req.body || {};
 
@@ -196,9 +195,19 @@ export default async function handler(req, res) {
 
         if (acao === "iniciar") {
 
-            // Limpa respostas anteriores.
+            // Apaga respostas da partida anterior.
             await sql`
                 DELETE FROM respostas
+            `;
+
+            // NOVO:
+            // Limpa o histórico das perguntas utilizadas.
+            // Assim, todas as perguntas ficam disponíveis
+            // novamente para a nova partida.
+            //
+            // Isso NÃO apaga nenhuma pergunta cadastrada.
+            await sql`
+                DELETE FROM perguntas_utilizadas
             `;
 
             // Zera a pontuação dos jogadores.
@@ -207,7 +216,7 @@ export default async function handler(req, res) {
                 SET pontuacao = 0
             `;
 
-            // Reinicia o controle do jogo.
+            // Reinicia o estado do jogo.
             await sql`
                 UPDATE jogo
                 SET
@@ -248,6 +257,7 @@ export default async function handler(req, res) {
 
             const estado = jogos[0];
 
+            // Não libera perguntas após a finalização.
             if (estado.encerrado) {
                 return res.status(400).json({
                     sucesso: false,
@@ -256,7 +266,7 @@ export default async function handler(req, res) {
             }
 
             // Impede liberar outra pergunta enquanto
-            // a pergunta atual ainda está dentro dos 60 segundos.
+            // a atual ainda estiver dentro dos 60 segundos.
             if (
                 estado.pergunta_ativa &&
                 estado.tempo_inicio
@@ -274,9 +284,16 @@ export default async function handler(req, res) {
                 }
             }
 
-            // Seleciona uma pergunta aleatória.
-            // Evita a pergunta imediatamente anterior.
-            // Também exclui perguntas já respondidas.
+            // =================================================
+            // NOVO - ESCOLHER UMA PERGUNTA NÃO UTILIZADA
+            // =================================================
+            // Verifica a tabela perguntas_utilizadas.
+            //
+            // Uma pergunta já apresentada não poderá
+            // aparecer novamente nesta partida.
+            //
+            // Também mantém a verificação das respostas.
+
             const resultado = await sql`
                 SELECT *
                 FROM perguntas p
@@ -285,16 +302,27 @@ export default async function handler(req, res) {
                         ${estado.pergunta_id}::integer IS NULL
                         OR p.id <> ${estado.pergunta_id}
                     )
+
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM perguntas_utilizadas pu
+                        WHERE pu.pergunta_id = p.id
+                    )
+
                     AND NOT EXISTS (
                         SELECT 1
                         FROM respostas r
                         WHERE r.pergunta_id = p.id
                     )
+
                 ORDER BY RANDOM()
                 LIMIT 1
             `;
 
-            // Finaliza o jogo se não houver perguntas.
+            // =================================================
+            // QUANDO TODAS AS PERGUNTAS FOREM UTILIZADAS
+            // =================================================
+
             if (!resultado.length) {
 
                 await sql`
@@ -311,37 +339,80 @@ export default async function handler(req, res) {
                 return res.status(200).json({
                     sucesso: true,
                     finalizado: true,
-                    mensagem: "Não há mais perguntas disponíveis."
+                    mensagem: "Todas as perguntas disponíveis foram utilizadas."
                 });
             }
 
             const p = resultado[0];
 
+            // Número da próxima pergunta.
             const numero =
                 Number(estado.numero_pergunta || 0) + 1;
 
-            // Atualiza somente a partida selecionada.
-            // Impede que comandos simultâneos liberem
-            // duas perguntas na mesma rodada.
+            // =================================================
+            // NOVO - ATUALIZAR O JOGO E REGISTRAR A PERGUNTA
+            // =================================================
+            // O PostgreSQL executa as duas operações
+            // dentro de um único comando SQL.
+            //
+            // Se o registro da pergunta falhar,
+            // a atualização do jogo também é desfeita.
+            //
+            // Isso evita liberar uma pergunta sem
+            // registrá-la como utilizada.
+
             const atualizacao = await sql`
-                UPDATE jogo
-                SET
-                    iniciado = TRUE,
-                    pergunta_ativa = TRUE,
-                    numero_pergunta = ${numero},
-                    tempo_inicio = NOW(),
-                    tempo_restante = 60,
-                    pergunta_id = ${p.id},
-                    encerrado = FALSE
-                WHERE id = ${estado.id}
-                  AND numero_pergunta IS NOT DISTINCT FROM
-                      ${estado.numero_pergunta}
-                  AND pergunta_id IS NOT DISTINCT FROM
-                      ${estado.pergunta_id}
-                  AND encerrado = FALSE
-                RETURNING tempo_inicio
+                WITH rodada_atualizada AS (
+
+                    UPDATE jogo
+                    SET
+                        iniciado = TRUE,
+                        pergunta_ativa = TRUE,
+                        numero_pergunta = ${numero},
+                        tempo_inicio = NOW(),
+                        tempo_restante = 60,
+                        pergunta_id = ${p.id},
+                        encerrado = FALSE
+
+                    WHERE id = ${estado.id}
+
+                      AND numero_pergunta
+                          IS NOT DISTINCT FROM
+                          ${estado.numero_pergunta}
+
+                      AND pergunta_id
+                          IS NOT DISTINCT FROM
+                          ${estado.pergunta_id}
+
+                      AND encerrado = FALSE
+
+                    RETURNING pergunta_id, tempo_inicio
+                ),
+
+                pergunta_registrada AS (
+
+                    INSERT INTO perguntas_utilizadas (
+                        pergunta_id
+                    )
+
+                    SELECT pergunta_id
+                    FROM rodada_atualizada
+
+                    RETURNING pergunta_id
+                )
+
+                SELECT
+                    rodada_atualizada.tempo_inicio
+
+                FROM rodada_atualizada
+
+                INNER JOIN pergunta_registrada
+                    ON pergunta_registrada.pergunta_id =
+                       rodada_atualizada.pergunta_id
             `;
 
+            // Impede liberações duplicadas quando
+            // dois comandos chegam ao mesmo tempo.
             if (!atualizacao.length) {
                 return res.status(409).json({
                     sucesso: false,
@@ -349,7 +420,7 @@ export default async function handler(req, res) {
                 });
             }
 
-            // Define a pontuação da pergunta.
+            // Pontuação por dificuldade.
             const valores = {
                 facil: 10,
                 medio: 20,
@@ -357,7 +428,7 @@ export default async function handler(req, res) {
                 desafio: 40
             };
 
-            // Não envia a resposta correta ao navegador.
+            // Retorna a pergunta sem revelar a resposta correta.
             return res.status(200).json({
                 sucesso: true,
                 pergunta: {
@@ -383,8 +454,8 @@ export default async function handler(req, res) {
 
         if (acao === "encerrar_pergunta") {
 
-            // Finaliza a partida, mas mantém os jogadores
-            // e suas pontuações para exibir o ranking.
+            // Finaliza a partida, mas preserva
+            // jogadores e pontuações para o ranking.
             await sql`
                 UPDATE jogo
                 SET
@@ -418,8 +489,8 @@ export default async function handler(req, res) {
                 DELETE FROM jogadores
             `;
 
-            // Reinicia o estado do jogo.
-            // As perguntas cadastradas são preservadas.
+            // Reinicia o controle da partida.
+            // Não apaga as perguntas cadastradas.
             await sql`
                 UPDATE jogo
                 SET
@@ -438,7 +509,7 @@ export default async function handler(req, res) {
             });
         }
 
-        // Bloqueia comandos desconhecidos.
+        // Bloqueia ações desconhecidas.
         return res.status(400).json({
             sucesso: false,
             erro: "Ação inválida."
@@ -446,8 +517,7 @@ export default async function handler(req, res) {
 
     } catch (erro) {
 
-        // Registra o erro no servidor sem expor
-        // informações internas aos jogadores.
+        // Registra o erro no servidor.
         console.error("Erro no controle do jogo:", erro);
 
         return res.status(500).json({
