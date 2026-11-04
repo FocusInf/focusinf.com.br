@@ -249,12 +249,26 @@ function controlarBotoes() {
 }
 
 // =====================================================
-// ENVIAR COMANDO AO SERVIDOR
+// ENVIAR COMANDO AO SERVIDOR COM SENHA DO ADMINISTRADOR
 // =====================================================
+
+// Mantém a senha apenas na memória da página atual.
+// Ela não é gravada no localStorage nem no sessionStorage.
+let senhaAdmin = "";
 
 async function enviarComando(acao) {
     // Evita dois cliques simultâneos.
-    if (comandoEmAndamento) return;
+    if (comandoEmAndamento) return null;
+
+    // Solicita a senha somente quando for executar um comando.
+    if (!senhaAdmin) {
+        const digitada = prompt("Digite a senha do administrador:");
+
+        // Cancelar o pedido não executa nenhuma ação.
+        if (digitada === null || digitada === "") return null;
+
+        senhaAdmin = digitada;
+    }
 
     comandoEmAndamento = true;
     controlarBotoes();
@@ -264,13 +278,22 @@ async function enviarComando(acao) {
         const resposta = await fetch("/api/jogo", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                // O servidor verificará esta senha antes de executar a ação.
+                "X-Admin-Password": senhaAdmin
             },
             cache: "no-store",
             body: JSON.stringify({ acao })
         });
 
+        // Tenta ler a mensagem enviada pela API.
         const dados = await resposta.json();
+
+        // Apaga a senha da memória se o servidor a rejeitar.
+        if (resposta.status === 401 || resposta.status === 403) {
+            senhaAdmin = "";
+            throw new Error(dados.erro || "Senha incorreta. Tente novamente.");
+        }
 
         if (!resposta.ok || !dados.sucesso) {
             throw new Error(
