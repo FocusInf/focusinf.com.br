@@ -426,6 +426,55 @@ async function verificar(){
         avisoConexao("");
         const jogo = d.jogo;
 
+         
+        // Verifica se o jogador continua cadastrado.
+        // Não confunde a limpeza de uma partida encerrada
+        // com a remoção individual de um participante.
+        if (!jogo.encerrado) {
+            const respostaJogadores = await fetch(
+                "/api/jogadores?_=" + Date.now(),
+                { cache: "no-store" }
+            );
+
+            if (!respostaJogadores.ok) {
+                throw new Error("Falha ao consultar jogadores.");
+            }
+
+            const dadosJogadores = await respostaJogadores.json();
+
+            if (!dadosJogadores.sucesso) {
+                throw new Error("Lista de jogadores indisponível.");
+            }
+
+            // Confere o ID, pois nomes podem ser parecidos.
+            const aindaCadastrado = dadosJogadores.jogadores.some(
+                jogador => Number(jogador.id) === Number(jogadorId)
+            );
+
+            if (!aindaCadastrado) {
+                // Interrompe a participação no celular removido.
+                clearInterval(timer);
+                bloquear();
+                sessionStorage.removeItem("desafioJogador");
+                jogadorId = null;
+
+                // Substitui o ranking pela mensagem de banimento.
+                const conteudo = document.querySelector(".container");
+
+                const titulo = document.createElement("h1");
+                titulo.textContent = "🚫 Você foi banido do Desafio Bíblico";
+
+                const mensagem = document.createElement("p");
+                mensagem.className = "mensagem";
+                mensagem.textContent =
+                    "Sua participação foi encerrada pelo administrador.";
+
+                conteudo.replaceChildren(titulo, mensagem);
+                return;
+            }
+        }
+
+
         if (jogo.encerrado) {
             clearInterval(timer);
             bloquear();
