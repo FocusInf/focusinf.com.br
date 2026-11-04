@@ -195,7 +195,7 @@ export default async function handler(req, res) {
         const { acao } = req.body || {};
 
         // =================================================
-        // NOVO - REMOVER UM JOGADOR
+        // REMOVER UM JOGADOR E REGISTRAR BANIMENTO
         // =================================================
 
         if (acao === "remover_jogador") {
@@ -228,6 +228,26 @@ export default async function handler(req, res) {
                     erro: "Jogador não encontrado."
                 });
             }
+
+            // Registra o banimento antes de excluir o jogador.
+            // O nome normalizado impede recadastro com o mesmo nome.
+            // O token_hash permitirá bloquear o mesmo navegador
+            // quando a identificação secreta estiver ativa.
+            await sql`
+                INSERT INTO jogadores_banidos (
+                    nome_normalizado,
+                    token_hash
+                )
+                SELECT
+                    LOWER(TRIM(nome)),
+                    token_hash
+                FROM jogadores
+                WHERE id = ${jogadorId}
+                ON CONFLICT (nome_normalizado)
+                DO UPDATE SET
+                    token_hash = EXCLUDED.token_hash,
+                    banido_em = NOW()
+            `;
 
             // Apaga somente as respostas desse jogador.
             // As respostas dos demais são preservadas.
@@ -309,6 +329,12 @@ export default async function handler(req, res) {
         // =================================================
 
         if (acao === "iniciar") {
+
+            // Uma nova partida libera os jogadores banidos
+            // na partida anterior.
+            await sql`
+                DELETE FROM jogadores_banidos
+            `;
 
             // Limpa as respostas da partida anterior.
             await sql`
