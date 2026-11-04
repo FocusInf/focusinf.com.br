@@ -1,22 +1,85 @@
 
 import { neon } from "@neondatabase/serverless";
+import { createHash, timingSafeEqual } from "node:crypto";
 
 // =====================================================
 // DESAFIO BÍBLICO - CONTROLE DO JOGO
 // =====================================================
-// Controla o início da partida, as perguntas,
-// o cronômetro e o encerramento.
-// Utiliza o banco PostgreSQL do Neon.
+// GET: consulta pública do estado da partida.
+// POST: comandos exclusivos do administrador.
+// A senha é conferida no servidor, nunca exposta no HTML.
 // =====================================================
 
+// Compara duas senhas de forma resistente a ataques de tempo.
+// Os hashes têm sempre o mesmo tamanho.
+function senhaValida(recebida, configurada) {
+    if (typeof recebida !== "string" || recebida.length > 1024) {
+        return false;
+    }
+
+    const hashRecebido = createHash("sha256")
+        .update(recebida, "utf8")
+        .digest();
+
+    const hashConfigurado = createHash("sha256")
+        .update(configurada, "utf8")
+        .digest();
+
+    return timingSafeEqual(hashRecebido, hashConfigurado);
+}
+
 export default async function handler(req, res) {
-    // Impede que o navegador reutilize estados antigos.
+
+    // Impede que o navegador reutilize informações antigas.
     res.setHeader(
         "Cache-Control",
         "no-store, no-cache, must-revalidate"
     );
 
+    // Somente GET e POST são permitidos.
+    if (req.method !== "GET" && req.method !== "POST") {
+        return res.status(405).json({
+            sucesso: false,
+            erro: "Método não permitido."
+        });
+    }
+
+    // =================================================
+    // PROTEÇÃO DOS COMANDOS ADMINISTRATIVOS
+    // =================================================
+    // GET permanece público para os jogadores.
+    // POST exige a senha configurada na Vercel.
+
+    if (req.method === "POST") {
+
+        // Lê a senha secreta armazenada na Vercel.
+        const senhaConfigurada =
+            process.env.DESAFIO_ADMIN_PASSWORD;
+
+        // Se a senha não estiver configurada,
+        // nenhum comando administrativo será executado.
+        if (!senhaConfigurada) {
+            return res.status(503).json({
+                sucesso: false,
+                erro: "Senha administrativa não configurada no servidor."
+            });
+        }
+
+        // Recebe a senha enviada pelo painel administrativo.
+        const senhaRecebida =
+            req.headers["x-admin-password"];
+
+        // Bloqueia comandos com senha incorreta.
+        if (!senhaValida(senhaRecebida, senhaConfigurada)) {
+            return res.status(401).json({
+                sucesso: false,
+                erro: "Senha do administrador incorreta."
+            });
+        }
+    }
+
     try {
+        // Conecta ao banco de dados Neon.
         const sql = neon(process.env.DATABASE_URL);
 
         // =================================================
@@ -24,6 +87,7 @@ export default async function handler(req, res) {
         // =================================================
 
         if (req.method === "GET") {
+
             const jogos = await sql`
                 SELECT *
                 FROM jogo
@@ -72,6 +136,7 @@ export default async function handler(req, res) {
             let pergunta = null;
 
             if (perguntaAtiva && estado.pergunta_id) {
+
                 const resultado = await sql`
                     SELECT
                         id,
@@ -89,8 +154,10 @@ export default async function handler(req, res) {
                 `;
 
                 if (resultado.length) {
+
                     const p = resultado[0];
 
+                    // Pontuação de cada dificuldade.
                     const valores = {
                         facil: 10,
                         medio: 20,
@@ -119,13 +186,7 @@ export default async function handler(req, res) {
         // =================================================
         // POST - COMANDOS DO ADMINISTRADOR
         // =================================================
-
-        if (req.method !== "POST") {
-            return res.status(405).json({
-                sucesso: false,
-                erro: "Método não permitido."
-            });
-        }
+        // A senha já foi validada antes de chegar aqui.
 
         const { acao } = req.body || {};
 
@@ -134,6 +195,7 @@ export default async function handler(req, res) {
         // =================================================
 
         if (acao === "iniciar") {
+
             // Limpa respostas anteriores.
             await sql`
                 DELETE FROM respostas
@@ -169,6 +231,7 @@ export default async function handler(req, res) {
         // =================================================
 
         if (acao === "proxima") {
+
             const jogos = await sql`
                 SELECT *
                 FROM jogo
@@ -192,12 +255,13 @@ export default async function handler(req, res) {
                 });
             }
 
-            // Evita liberar outra pergunta enquanto
-            // a pergunta atual ainda está no tempo.
+            // Impede liberar outra pergunta enquanto
+            // a pergunta atual ainda está dentro dos 60 segundos.
             if (
                 estado.pergunta_ativa &&
                 estado.tempo_inicio
             ) {
+
                 const inicio = new Date(
                     estado.tempo_inicio
                 ).getTime();
@@ -230,7 +294,9 @@ export default async function handler(req, res) {
                 LIMIT 1
             `;
 
+            // Finaliza o jogo se não houver perguntas.
             if (!resultado.length) {
+
                 await sql`
                     UPDATE jogo
                     SET
@@ -254,9 +320,9 @@ export default async function handler(req, res) {
             const numero =
                 Number(estado.numero_pergunta || 0) + 1;
 
-            // Atualiza somente o jogo selecionado.
-            // Confere se outro comando já alterou
-            // a rodada, evitando liberações duplicadas.
+            // Atualiza somente a partida selecionada.
+            // Impede que comandos simultâneos liberem
+            // duas perguntas na mesma rodada.
             const atualizacao = await sql`
                 UPDATE jogo
                 SET
@@ -283,6 +349,7 @@ export default async function handler(req, res) {
                 });
             }
 
+            // Define a pontuação da pergunta.
             const valores = {
                 facil: 10,
                 medio: 20,
@@ -311,10 +378,13 @@ export default async function handler(req, res) {
         }
 
         // =================================================
-        // ENCERRAR PERGUNTA E FINALIZAR PARTIDA
+        // FINALIZAR PARTIDA E MOSTRAR RANKING
         // =================================================
 
         if (acao === "encerrar_pergunta") {
+
+            // Finaliza a partida, mas mantém os jogadores
+            // e suas pontuações para exibir o ranking.
             await sql`
                 UPDATE jogo
                 SET
@@ -337,14 +407,19 @@ export default async function handler(req, res) {
         // =================================================
 
         if (acao === "encerrar") {
+
+            // Apaga as respostas dos jogadores.
             await sql`
                 DELETE FROM respostas
             `;
 
+            // Remove os jogadores cadastrados.
             await sql`
                 DELETE FROM jogadores
             `;
 
+            // Reinicia o estado do jogo.
+            // As perguntas cadastradas são preservadas.
             await sql`
                 UPDATE jogo
                 SET
@@ -363,12 +438,16 @@ export default async function handler(req, res) {
             });
         }
 
+        // Bloqueia comandos desconhecidos.
         return res.status(400).json({
             sucesso: false,
             erro: "Ação inválida."
         });
 
     } catch (erro) {
+
+        // Registra o erro no servidor sem expor
+        // informações internas aos jogadores.
         console.error("Erro no controle do jogo:", erro);
 
         return res.status(500).json({
