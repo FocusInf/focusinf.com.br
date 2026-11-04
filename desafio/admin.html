@@ -1,126 +1,125 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>📖 Desafio Bíblico - Administrador</title>
 
 <style>
+* { box-sizing: border-box; }
 
-*{
-box-sizing:border-box
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #111827, #1e3a8a);
+    color: #111827;
+    min-height: 100vh;
 }
 
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:linear-gradient(135deg,#111827,#1e3a8a);
-color:#111827;
-min-height:100vh;
-padding:20px
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px #0006;
 }
 
-.container{
-max-width:1100px;
-margin:auto;
-background:white;
-padding:30px;
-border-radius:20px;
-box-shadow:0 15px 40px #0006
+h1 {
+    text-align: center;
+    color: #1e3a8a;
 }
 
-h1{
-text-align:center;
-color:#1e3a8a
+.painel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-.painel{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px
+.card {
+    padding: 20px;
+    border-radius: 15px;
+    background: #f3f4f6;
 }
 
-.card{
-background:#f3f4f6;
-padding:20px;
-border-radius:15px
+button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 8px 0;
+    border: 0;
+    border-radius: 10px;
+    background: #1e3a8a;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-button{
-width:100%;
-padding:15px;
-margin:5px 0;
-border:0;
-border-radius:10px;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-background:#1e3a8a;
-color:white
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
 }
 
-button.encerrar{
-background:#b91c1c
+button.encerrar {
+    background: #b91c1c;
 }
 
-button:disabled{
-opacity:.5;
-cursor:not-allowed
+.pergunta {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0;
 }
 
-.pergunta{
-font-size:24px;
-font-weight:bold;
-margin:20px 0
+.pontos {
+    font-size: 22px;
+    font-weight: bold;
+    color: #b45309;
 }
 
-.pontos{
-font-size:22px;
-font-weight:bold;
-color:#b45309
+.timer {
+    font-size: 45px;
+    font-weight: bold;
+    color: #dc2626;
+    text-align: center;
 }
 
-.timer{
-font-size:45px;
-font-weight:bold;
-color:#dc2626;
-text-align:center
+.status {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 15px 0;
 }
 
-.ranking p{
-padding:10px;
-margin:5px 0;
-background:white;
-border-radius:8px
+.respostas {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin: 12px 0;
+    color: #1e3a8a;
 }
 
-.status{
-font-size:18px;
-font-weight:bold;
-margin:10px 0
+.ranking p,
+#jogadores p {
+    padding: 10px;
+    margin: 5px 0;
+    background: white;
+    border-radius: 8px;
 }
 
-.respostas{
-font-size:18px;
-font-weight:bold;
-text-align:center;
-margin:10px 0;
-color:#1e3a8a
+#aviso {
+    color: #b91c1c;
+    font-weight: bold;
 }
 
-@media(max-width:700px){
-
-.painel{
-grid-template-columns:1fr
+@media (max-width: 700px) {
+    .painel {
+        grid-template-columns: 1fr;
+    }
 }
-
-}
-
 </style>
-
 </head>
 
 <body>
@@ -131,761 +130,523 @@ grid-template-columns:1fr
 
 <div class="painel">
 
-<div class="card">
+    <div class="card">
+        <h2>🎮 Controle da partida</h2>
 
-<h2>🎮 Controle da partida</h2>
+        <button id="btnIniciar" onclick="iniciar()">
+            ▶️ Iniciar partida
+        </button>
 
-<button onclick="iniciar()">
-▶️ Iniciar partida
-</button>
+        <button id="btnProxima" onclick="proxima()">
+            ➡️ Liberar próxima pergunta
+        </button>
 
-<button onclick="proxima()">
-➡️ Liberar próxima pergunta
-</button>
+        <button id="btnFinalizar" onclick="finalizar()">
+            🏆 Finalizar e mostrar ranking
+        </button>
 
-<button onclick="encerrarPergunta()">
-⏹️ Encerrar pergunta
-</button>
+        <button id="btnEncerrar" class="encerrar"
+                onclick="encerrar()">
+            🛑 Encerrar e limpar jogadores
+        </button>
 
-<button class="encerrar" onclick="encerrar()">
-🛑 Encerrar partida
-</button>
+        <div id="status" class="status">
+            Carregando...
+        </div>
 
-<div id="status" class="status"></div>
+        <div id="aviso" role="status"></div>
+    </div>
 
-</div>
-
-
-<div class="card">
-
-<h2>👥 Jogadores</h2>
-
-<div id="jogadores">
-Carregando...
-</div>
-
-</div>
+    <div class="card">
+        <h2>👥 Jogadores</h2>
+        <div id="jogadores">Carregando...</div>
+    </div>
 
 </div>
-
 
 <div class="card" style="margin-top:20px">
+    <h2>📖 Pergunta atual</h2>
 
-<h2>📖 Pergunta atual</h2>
+    <div id="pontos" class="pontos"></div>
+    <div id="tempo" class="timer">--</div>
 
-<div class="pontos" id="pontos"></div>
+    <div id="respostas" class="respostas">
+        0 / 0 jogadores responderam
+    </div>
 
-<div class="timer" id="tempo">--</div>
+    <div id="texto" class="pergunta">
+        Nenhuma pergunta liberada.
+    </div>
 
-<div class="respostas" id="respostas">
-0 / 0 jogadores responderam
+    <div id="numero"></div>
 </div>
-
-<div class="pergunta" id="texto">
-Nenhuma pergunta liberada.
-</div>
-
-<div id="numero"></div>
-
-</div>
-
 
 <div class="card" style="margin-top:20px">
-
-<h2>🏆 Ranking</h2>
-
-<div class="ranking" id="ranking">
-Carregando...
+    <h2>🏆 Ranking</h2>
+    <div id="ranking" class="ranking">
+        Carregando...
+    </div>
 </div>
 
 </div>
-
-</div>
-
 
 <script>
+// =====================================================
+// DESAFIO BÍBLICO - PAINEL ADMINISTRATIVO
+// =====================================================
 
-let timer = null;
+// Guarda o estado atual da partida.
+let estadoAtual = null;
 
-let perguntaAtual = null;
+// Guarda a identificação da rodada.
+let rodadaAtual = null;
 
+// Controla o cronômetro local.
+let intervaloTimer = null;
+let fimLocal = 0;
+
+// Impede comandos repetidos e consultas simultâneas.
+let comandoEmAndamento = false;
+let consultaEmAndamento = false;
+
+// Guarda a pergunta para contar respostas.
 let ultimaPerguntaId = null;
 
+// =====================================================
+// FUNÇÕES AUXILIARES
+// =====================================================
 
-/* =====================================================
-   INICIAR PARTIDA
-===================================================== */
-
-async function iniciar(){
-
-    try{
-
-        const r = await fetch("/api/jogo",{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-            body:JSON.stringify({
-                acao:"iniciar"
-            })
-
-        });
-
-        const d = await r.json();
-
-        if(!d.sucesso){
-
-            alert(d.erro || "Erro ao iniciar.");
-
-            return;
-        }
-
-        alert("Partida iniciada!");
-
-        await atualizar();
-
-    }catch(e){
-
-        console.error(e);
-
-        alert("Erro de conexão.");
-
-    }
-
+// Encontra um elemento da página pelo ID.
+function elemento(id) {
+    return document.getElementById(id);
 }
 
+// Mostra mensagens de erro ou conexão.
+function aviso(mensagem) {
+    elemento("aviso").textContent = mensagem || "";
+}
 
-/* =====================================================
-   PRÓXIMA PERGUNTA
-===================================================== */
+// Habilita ou desabilita os botões.
+function controlarBotoes() {
+    const j = estadoAtual;
 
-async function proxima(){
+    elemento("btnIniciar").disabled = comandoEmAndamento;
 
-    try{
+    elemento("btnProxima").disabled =
+        comandoEmAndamento ||
+        !j ||
+        !j.iniciado ||
+        j.encerrado ||
+        j.pergunta_ativa;
 
-        const r = await fetch("/api/jogo",{
+    elemento("btnFinalizar").disabled =
+        comandoEmAndamento ||
+        !j ||
+        j.encerrado;
 
-            method:"POST",
+    elemento("btnEncerrar").disabled =
+        comandoEmAndamento;
+}
 
-            headers:{
-                "Content-Type":"application/json"
+// =====================================================
+// ENVIAR COMANDO AO SERVIDOR
+// =====================================================
+
+async function enviarComando(acao) {
+    // Evita dois cliques simultâneos.
+    if (comandoEmAndamento) return;
+
+    comandoEmAndamento = true;
+    controlarBotoes();
+    aviso("");
+
+    try {
+        const resposta = await fetch("/api/jogo", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
             },
-
-            body:JSON.stringify({
-                acao:"proxima"
-            })
-
+            cache: "no-store",
+            body: JSON.stringify({ acao })
         });
 
-        const d = await r.json();
+        const dados = await resposta.json();
 
-        if(!d.sucesso){
-
-            alert(d.erro || "Erro.");
-
-            return;
-        }
-
-        if(d.finalizado){
-
-            alert(
-                "Não existem mais perguntas disponíveis."
+        if (!resposta.ok || !dados.sucesso) {
+            throw new Error(
+                dados.erro || "Não foi possível executar o comando."
             );
-
-            await atualizar();
-
-            return;
         }
 
-        await atualizar();
+        // Atualiza o painel depois de executar o comando.
+        await atualizarTudo();
 
-    }catch(e){
+        return dados;
 
-        console.error(e);
+    } catch (erro) {
+        console.error("Erro no comando:", erro);
+        aviso(erro.message || "Erro de conexão.");
+        return null;
 
-        alert("Erro de conexão.");
-
+    } finally {
+        comandoEmAndamento = false;
+        controlarBotoes();
     }
-
 }
 
+// =====================================================
+// INICIAR PARTIDA
+// =====================================================
 
-/* =====================================================
-   ENCERRAR PERGUNTA
-===================================================== */
-
-async function encerrarPergunta(){
-
-    try{
-
-        const r = await fetch("/api/jogo",{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-            body:JSON.stringify({
-                acao:"encerrar_pergunta"
-            })
-
-        });
-
-        const d = await r.json();
-
-        if(!d.sucesso){
-
-            alert(
-                d.erro ||
-                "Não foi possível encerrar a pergunta."
-            );
-
-            return;
-        }
-
-        /*
-         * Para imediatamente o cronômetro
-         * do administrador.
-         */
-
-        clearInterval(timer);
-
-        document.getElementById("tempo").innerText = "0";
-
-        document.getElementById("status").innerText =
-            "🟡 Pergunta encerrada — ranking liberado";
-
-        await atualizar();
-
-    }catch(e){
-
-        console.error(e);
-
-        alert("Erro de conexão.");
-
-    }
-
-}
-
-
-/* =====================================================
-   ENCERRAR PARTIDA
-===================================================== */
-
-async function encerrar(){
-
-    if(
-        !confirm(
-            "Tem certeza que deseja encerrar a partida?\n\n" +
-            "Isso irá apagar os jogadores, respostas e pontuações."
-        )
-    ){
-
+async function iniciar() {
+    // Iniciar zera as respostas e pontuações anteriores.
+    if (!confirm(
+        "Iniciar uma nova partida?\n\n" +
+        "As respostas e pontuações anteriores serão zeradas."
+    )) {
         return;
     }
 
+    const dados = await enviarComando("iniciar");
 
-    try{
-
-        const r = await fetch("/api/jogo",{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-            body:JSON.stringify({
-                acao:"encerrar"
-            })
-
-        });
-
-        const d = await r.json();
-
-        if(!d.sucesso){
-
-            alert(
-                d.erro ||
-                "Erro ao encerrar partida."
-            );
-
-            return;
-        }
-
-        clearInterval(timer);
-
-        alert(
-            "Partida encerrada e dados limpos."
-        );
-
-        await atualizar();
-
-    }catch(e){
-
-        console.error(e);
-
-        alert("Erro de conexão.");
-
+    if (dados) {
+        ultimaPerguntaId = null;
+        rodadaAtual = null;
+        pararTimer();
+        aviso("");
     }
-
 }
 
+// =====================================================
+// LIBERAR PRÓXIMA PERGUNTA
+// =====================================================
 
-/* =====================================================
-   ATUALIZAR ESTADO DO JOGO
-===================================================== */
+async function proxima() {
+    const dados = await enviarComando("proxima");
 
-async function atualizar(){
-
-    try{
-
-        const r = await fetch(
-            "/api/jogo?_=" + Date.now()
-        );
-
-        const d = await r.json();
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-        const j = d.jogo;
-
-
-        /* =================================================
-           STATUS
-        ================================================= */
-
-        document.getElementById("status").innerText =
-
-            j.encerrado
-
-            ?
-
-            "🛑 Partida encerrada"
-
-            :
-
-            j.pergunta_ativa
-
-            ?
-
-            "🟢 Pergunta ativa"
-
-            :
-
-            j.iniciado
-
-            ?
-
-            "🟡 Aguardando próxima pergunta"
-
-            :
-
-            "⚪ Partida parada";
-
-
-
-      /* =================================================
-   PERGUNTA ATIVA
-================================================= */
-
-if(
-    j.pergunta_ativa &&
-    j.pergunta
-){
-
-    document.getElementById("texto").innerText =
-        j.pergunta.pergunta;
-
-    document.getElementById("pontos").innerText =
-        "💰 " +
-        j.pergunta.pontos +
-        " pontos";
-
-    document.getElementById("numero").innerText =
-        "Pergunta nº " +
-        j.numero_pergunta;
-
-    perguntaAtual = j;
-
-    ultimaPerguntaId =
-        j.pergunta.id;
-
-    if(!timer){
-
-        iniciarTimer(j.tempo_inicio);
-
+    if (dados && dados.finalizado) {
+        alert("Não há mais perguntas disponíveis.");
     }
-
 }
 
+// =====================================================
+// FINALIZAR E MOSTRAR RANKING
+// =====================================================
 
-        /* =================================================
-           PERGUNTA ENCERRADA
-        ================================================= */
-
-        else{
-
-            clearInterval(timer);
-
-            document.getElementById("tempo").innerText =
-                j.iniciado && Number(j.numero_pergunta || 0) > 0
-                ?
-                "ENCERRADA"
-                :
-                "--";
-
-            document.getElementById("texto").innerText =
-                "Nenhuma pergunta ativa.";
-
-            document.getElementById("pontos").innerText = "";
-
-            document.getElementById("numero").innerText = "";
-
-            perguntaAtual = null;
-
-        }
-
-
-        /*
-         * Atualiza contagem de respostas
-         */
-
-        await atualizarRespostas();
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
-}
-
-
-/* =====================================================
-   CRONÔMETRO
-===================================================== */
-
-function iniciarTimer(inicio){
-
-    clearInterval(timer);
-
-    if(!inicio){
-
-        document.getElementById("tempo").innerText =
-            "--";
-
+// Este comando finaliza a partida e mantém o ranking.
+// Não é apenas uma pausa entre perguntas.
+async function finalizar() {
+    if (!confirm(
+        "Finalizar a partida e mostrar o ranking final?"
+    )) {
         return;
     }
 
-
-    const fim =
-        new Date(inicio).getTime() +
-        60000;
-
-
-    function atualizarTimer(){
-
-        /*
-         * Se a pergunta já foi encerrada,
-         * não continua contando.
-         */
-
-        if(
-            perguntaAtual &&
-            perguntaAtual.pergunta_ativa === false
-        ){
-
-            clearInterval(timer);
-
-            document.getElementById("tempo").innerText =
-                "ENCERRADA";
-
-            return;
-        }
-
-
-        const restante =
-            Math.max(
-                0,
-                Math.ceil(
-                    (fim - Date.now()) / 1000
-                )
-            );
-
-
-        document.getElementById("tempo").innerText =
-            restante;
-
-
-        if(restante <= 0){
-
-            clearInterval(timer);
-
-        }
-
-    }
-
-
-    atualizarTimer();
-
-
-    timer =
-        setInterval(
-            atualizarTimer,
-            250
-        );
-
-}
-   
-/* =====================================================
-   CONTAR RESPOSTAS
-===================================================== */
-async function atualizarRespostas(){
-
-    try{
-
-        if(
-            !perguntaAtual ||
-            !perguntaAtual.pergunta
-        ){
-
-            return;
-        }
-
-        const r =
-            await fetch(
-                "/api/responder?pergunta_id=" +
-                perguntaAtual.pergunta.id +
-                "&_=" +
-                Date.now()
-            );
-
-        if(!r.ok){
-
-            return;
-        }
-
-        const d =
-            await r.json();
-
-        if(d.totalJogadores !== undefined){
-
-            document.getElementById(
-                "respostas"
-            ).innerText =
-
-                d.totalRespostas +
-                " / " +
-                d.totalJogadores +
-                " jogadores responderam";
-
-
-            if(
-                d.totalJogadores > 0 &&
-                d.totalRespostas >=
-                d.totalJogadores
-            ){
-
-                clearInterval(timer);
-
-                document.getElementById(
-                    "tempo"
-                ).innerText =
-                    "ENCERRADA";
-
-                document.getElementById(
-                    "status"
-                ).innerText =
-                    "🟡 Todos responderam";
-
-                return;
-            }
-
-        }
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
+    await enviarComando("encerrar_pergunta");
 }
 
-/* =====================================================
-   LISTAR JOGADORES
-===================================================== */
+// =====================================================
+// ENCERRAR E LIMPAR JOGADORES
+// =====================================================
 
-async function jogadores(){
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/jogadores?_=" + Date.now()
-            );
-
-        const d =
-            await r.json();
-
-        if(!d.sucesso){
-
-            document.getElementById(
-                "jogadores"
-            ).innerText =
-                "Erro ao carregar jogadores.";
-
-            return;
-        }
-
-
-        const lista =
-            d.jogadores || [];
-
-
-        if(lista.length === 0){
-
-            document.getElementById(
-                "jogadores"
-            ).innerText =
-                "Nenhum jogador.";
-
-            return;
-        }
-
-
-        document.getElementById(
-            "jogadores"
-        ).innerHTML =
-
-            lista.map(j => `
-
-                <p>
-
-                    👤 <b>${j.nome}</b>
-
-                    <br>
-
-                    💰 ${j.pontuacao} pontos
-
-                </p>
-
-            `).join("");
-
-
-    }catch(e){
-
-        console.error(e);
-
-        document.getElementById(
-            "jogadores"
-        ).innerText =
-            "Erro de conexão.";
+// Atenção: esta ação remove jogadores e respostas.
+// As perguntas cadastradas no Neon são preservadas.
+async function encerrar() {
+    if (!confirm(
+        "ATENÇÃO!\n\n" +
+        "Encerrar e apagar jogadores, respostas e pontuações?"
+    )) {
+        return;
     }
 
-}   
+    const dados = await enviarComando("encerrar");
 
-/* =====================================================
-   RANKING
-===================================================== */
+    if (dados) {
+        ultimaPerguntaId = null;
+        rodadaAtual = null;
+        pararTimer();
+    }
+}
 
-async function ranking(){
+// =====================================================
+// CRONÔMETRO
+// =====================================================
 
-    try{
+// Para o cronômetro e libera sua referência.
+// Isso permite iniciar outro cronômetro na nova rodada.
+function pararTimer() {
+    if (intervaloTimer !== null) {
+        clearInterval(intervaloTimer);
+        intervaloTimer = null;
+    }
+}
 
-        const r =
-            await fetch(
-                "/api/ranking"
-            );
-
-        const d =
-            await r.json();
-
-        if(!d.sucesso){
-
-            return;
-        }
-
-
-        document.getElementById(
-            "ranking"
-        ).innerHTML =
-
-            d.ranking.length
-
-            ?
-
-            d.ranking
-            .map((j,i)=>`
-
-                <p>
-
-                    <b>
-                        ${i+1}º
-                    </b>
-
-                    ${j.nome}
-
-                    —
-
-                    <b>
-                        ${j.pontuacao}
-                        pontos
-                    </b>
-
-                </p>
-
-            `)
-            .join("")
-
-            :
-
-            "Nenhum jogador.";
-
-    }catch(e){
-
-        console.error(e);
-
+// Atualiza os segundos exibidos no painel.
+function desenharTempo() {
+    if (!estadoAtual || !estadoAtual.pergunta_ativa) {
+        pararTimer();
+        return;
     }
 
+    const restante = Math.max(
+        0,
+        Math.ceil((fimLocal - Date.now()) / 1000)
+    );
+
+    elemento("tempo").textContent = String(restante);
+
+    if (restante <= 0) {
+        pararTimer();
+        elemento("tempo").textContent = "ENCERRADA";
+    }
 }
 
+// Inicia um cronômetro para a pergunta atual.
+function iniciarTimer(jogo) {
+    pararTimer();
 
-/* =====================================================
-   CICLO
-===================================================== */
+    // Usa o tempo restante informado pelo servidor.
+    // Assim, uma atualização da página não reinicia os 60s.
+    const restante = Math.max(
+        0,
+        Number(jogo.tempo_restante || 0)
+    );
 
-async function ciclo(){
+    fimLocal = Date.now() + restante * 1000;
 
-    await atualizar();
+    desenharTempo();
 
-    await jogadores();
-
-    await ranking();
-
+    if (restante > 0) {
+        intervaloTimer = setInterval(desenharTempo, 250);
+    }
 }
 
+// =====================================================
+// ATUALIZAR ESTADO DA PARTIDA
+// =====================================================
 
-/*
- * Atualiza a tela a cada 1 segundo.
- */
+async function atualizarJogo() {
+    const resposta = await fetch(
+        "/api/jogo?_=" + Date.now(),
+        { cache: "no-store" }
+    );
 
+    if (!resposta.ok) {
+        throw new Error("Falha ao consultar o jogo.");
+    }
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso || !dados.jogo) {
+        throw new Error(dados.erro || "Estado indisponível.");
+    }
+
+    const j = dados.jogo;
+    estadoAtual = j;
+
+    // Atualiza a situação da partida.
+    elemento("status").textContent =
+        j.encerrado
+            ? "🏆 Partida finalizada"
+            : j.pergunta_ativa
+                ? "🟢 Pergunta ativa"
+                : j.iniciado
+                    ? "🟡 Aguardando próxima pergunta"
+                    : "⚪ Partida parada";
+
+    if (j.pergunta_id) {
+        ultimaPerguntaId = j.pergunta_id;
+    }
+
+    if (j.pergunta_ativa && j.pergunta) {
+        // Identifica a rodada pelo ID, número e horário.
+        const chaveRodada = [
+            j.pergunta.id,
+            j.numero_pergunta,
+            j.tempo_inicio
+        ].join("|");
+
+        elemento("texto").textContent =
+            j.pergunta.pergunta;
+
+        elemento("pontos").textContent =
+            "💰 " + j.pergunta.pontos + " pontos";
+
+        elemento("numero").textContent =
+            "Pergunta nº " + j.numero_pergunta;
+
+        // Só reinicia o cronômetro quando muda a rodada.
+        if (
+            chaveRodada !== rodadaAtual ||
+            intervaloTimer === null
+        ) {
+            rodadaAtual = chaveRodada;
+            iniciarTimer(j);
+        }
+
+    } else {
+        // A pergunta terminou ou ainda não foi liberada.
+        pararTimer();
+        rodadaAtual = null;
+
+        elemento("tempo").textContent =
+            Number(j.numero_pergunta || 0) > 0
+                ? "ENCERRADA"
+                : "--";
+
+        elemento("texto").textContent =
+            "Nenhuma pergunta ativa.";
+
+        elemento("pontos").textContent = "";
+        elemento("numero").textContent = "";
+    }
+
+    controlarBotoes();
+}
+
+// =====================================================
+// CONTAR RESPOSTAS
+// =====================================================
+
+async function atualizarRespostas() {
+    if (!ultimaPerguntaId) {
+        elemento("respostas").textContent =
+            "0 / 0 jogadores responderam";
+        return;
+    }
+
+    const resposta = await fetch(
+        "/api/responder?pergunta_id=" +
+        encodeURIComponent(ultimaPerguntaId) +
+        "&_=" + Date.now(),
+        { cache: "no-store" }
+    );
+
+    if (!resposta.ok) return;
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    elemento("respostas").textContent =
+        dados.totalRespostas +
+        " / " +
+        dados.totalJogadores +
+        " jogadores responderam";
+}
+
+// =====================================================
+// LISTAR JOGADORES
+// =====================================================
+
+async function atualizarJogadores() {
+    const resposta = await fetch(
+        "/api/jogadores?_=" + Date.now(),
+        { cache: "no-store" }
+    );
+
+    if (!resposta.ok) return;
+
+    const dados = await resposta.json();
+    if (!dados.sucesso) return;
+
+    const destino = elemento("jogadores");
+    destino.replaceChildren();
+
+    if (!dados.jogadores?.length) {
+        destino.textContent = "Nenhum jogador.";
+        return;
+    }
+
+    // textContent evita interpretar nomes como código HTML.
+    for (const jogador of dados.jogadores) {
+        const linha = document.createElement("p");
+
+        linha.textContent =
+            "👤 " + jogador.nome +
+            " — 💰 " + jogador.pontuacao + " pontos";
+
+        destino.appendChild(linha);
+    }
+}
+
+// =====================================================
+// ATUALIZAR RANKING
+// =====================================================
+
+async function atualizarRanking() {
+    const resposta = await fetch(
+        "/api/ranking?_=" + Date.now(),
+        { cache: "no-store" }
+    );
+
+    if (!resposta.ok) return;
+
+    const dados = await resposta.json();
+    if (!dados.sucesso) return;
+
+    const destino = elemento("ranking");
+    destino.replaceChildren();
+
+    if (!dados.ranking?.length) {
+        destino.textContent = "Nenhum jogador.";
+        return;
+    }
+
+    dados.ranking.forEach((jogador, indice) => {
+        const linha = document.createElement("p");
+
+        linha.textContent =
+            (indice + 1) + "º " +
+            jogador.nome +
+            " — " +
+            jogador.pontuacao + " pontos";
+
+        destino.appendChild(linha);
+    });
+}
+
+// =====================================================
+// ATUALIZAÇÃO AUTOMÁTICA
+// =====================================================
+
+async function atualizarTudo() {
+    // Evita consultas sobrepostas quando a internet está lenta.
+    if (consultaEmAndamento) return;
+
+    consultaEmAndamento = true;
+
+    try {
+        await atualizarJogo();
+
+        // Atualiza as demais informações.
+        await Promise.all([
+            atualizarRespostas(),
+            atualizarJogadores(),
+            atualizarRanking()
+        ]);
+
+        aviso("");
+
+    } catch (erro) {
+        console.error("Erro de atualização:", erro);
+        aviso("Falha de conexão. Tentando novamente...");
+
+    } finally {
+        consultaEmAndamento = false;
+    }
+}
+
+// Executa uma consulta por vez, sem acumular requisições.
+async function ciclo() {
+    await atualizarTudo();
+    setTimeout(ciclo, 1000);
+}
+
+// Inicia o painel.
+controlarBotoes();
 ciclo();
 
-setInterval(
-    ciclo,
-    1000
-);
-
 </script>
-
 </body>
-
 </html>
