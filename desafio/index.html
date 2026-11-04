@@ -148,6 +148,7 @@ margin:20px 0;
 <div class="container">
 
 <h1>📖 Desafio Bíblico</h1>
+<div id="avisoConexao" role="status" style="display:none;text-align:center;background:#fff7ed;color:#9a3412;padding:10px;border-radius:10px;margin-bottom:12px"></div>
 
 
 <!-- =====================================================
@@ -319,23 +320,32 @@ Carregando ranking...
 <script>
 
 // =====================================================
-// VARIÁVEIS
+// VARIÁVEIS / SINCRONIZAÇÃO
 // =====================================================
-
 let jogadorId = null;
-
 let perguntaId = null;
-
 let perguntaNumero = 0;
-
 let respondida = false;
-
+let enviandoResposta = false;
 let ultimaPergunta = null;
-
+let ultimaRodada = null;
 let timer = null;
-
 let fimDaPergunta = 0;
+let verificacaoAgendada = null;
+let verificacaoEmCurso = false;
 
+// Mostra uma mensagem de conexão sem esconder as perguntas.
+function avisoConexao(mensagem) {
+    const aviso = document.getElementById("avisoConexao");
+    aviso.innerText = mensagem;
+    aviso.style.display = mensagem ? "block" : "none";
+}
+
+// Agenda uma única verificação por vez; evita consultas simultâneas.
+function agendarVerificacao(atraso = 1000) {
+    clearTimeout(verificacaoAgendada);
+    verificacaoAgendada = setTimeout(verificar, atraso);
+}
 
 // =====================================================
 // TROCAR TELA
@@ -368,233 +378,96 @@ function tela(nome){
 // =====================================================
 
 async function entrar(){
-
-    const nome =
-        document
-        .getElementById("nome")
-        .value
-        .trim();
-
-
-    if(!nome){
-
-        document
-        .getElementById("mensagem")
-        .innerText =
-            "Digite seu nome.";
-
+    const nome = document.getElementById("nome").value.trim();
+    if (!nome) {
+        document.getElementById("mensagem").innerText = "Digite seu nome.";
         return;
     }
 
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/jogadores",
-                {
-
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            nome:nome
-                        })
-                }
-            );
-
-
-        const d =
-            await r.json();
-
-
-        if(!d.sucesso){
-
-            document
-            .getElementById("mensagem")
-            .innerText =
-                d.erro ||
-                "Erro ao entrar.";
-
+    try {
+        const r = await fetch("/api/jogadores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome })
+        });
+        const d = await r.json();
+        if (!r.ok || !d.sucesso || !d.jogador?.id) {
+            document.getElementById("mensagem").innerText = d.erro || "Erro ao entrar.";
             return;
         }
 
-
-        jogadorId =
-            d.jogador.id;
-
-
+        jogadorId = d.jogador.id;
+        // Mantém este jogador ao atualizar a aba; não é uma autenticação.
+        sessionStorage.setItem("desafioJogador", JSON.stringify({ id: jogadorId, nome }));
         tela("aguardando");
-
-
-        verificar();
-
-
-    }catch(e){
-
-        console.error(e);
-
-        document
-        .getElementById("mensagem")
-        .innerText =
-            "Erro de conexão.";
-
+        avisoConexao("");
+        agendarVerificacao(0);
+    } catch (e) {
+        console.error("Falha ao cadastrar jogador:", e);
+        document.getElementById("mensagem").innerText =
+            "Falha de conexão. Tente entrar novamente.";
     }
-
 }
-
 
 // =====================================================
 // VERIFICAR ESTADO DO JOGO
 // =====================================================
 
 async function verificar(){
+    // Uma única consulta por rodada, mesmo com conexões lentas.
+    if (!jogadorId || verificacaoEmCurso) return;
+    verificacaoEmCurso = true;
 
-    if(!jogadorId){
+    try {
+        const r = await fetch("/api/jogo?_=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const d = await r.json();
+        if (!d.sucesso || !d.jogo) throw new Error(d.erro || "Estado indisponível");
+        avisoConexao("");
+        const jogo = d.jogo;
 
-        return;
-    }
-
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/jogo?_=" +
-                Date.now()
-            );
-
-
-        const d =
-            await r.json();
-
-
-        if(!d.sucesso){
-
-            setTimeout(
-                verificar,
-                1000
-            );
-
-            return;
-        }
-
-
-        const jogo =
-            d.jogo;
-
-
-        // =================================================
-        // PARTIDA ENCERRADA
-        // =================================================
-
-        if(jogo.encerrado){
-
+        if (jogo.encerrado) {
             clearInterval(timer);
-
             bloquear();
-
             perguntaId = null;
-
             await carregarRankingFinal();
-
             tela("final");
-
             return;
         }
 
+        if (jogo.pergunta_ativa === true && jogo.pergunta) {
+            // A rodada leva em conta ID, número e início: mesma pergunta em
+            // outra partida deve aparecer normalmente.
+            const rodada = [jogo.pergunta.id, jogo.numero_pergunta, jogo.tempo_inicio].join("|");
+            if (ultimaRodada !== rodada) {
+                carregar(jogo);
+                ultimaRodada = rodada;
+            } else if (!respondida && document.getElementById("pergunta").classList.contains("ativa") === false) {
+                // Recupera a tela caso ela tenha ficado no ranking após instabilidade.
+                tela("pergunta");
+            }
+            return;
+        }
 
-        // =================================================
-        // PERGUNTA ATIVA
-        // =================================================
-
-
-
-if(
-    jogo.pergunta_ativa === true &&
-    jogo.pergunta
-){
-
-    if(
-        Number(ultimaPergunta) !==
-        Number(jogo.pergunta.id)
-    ){
-
-        carregar(jogo);
-
-    }
-
-
-    setTimeout(
-        verificar,
-        500
-    );
-
-    return;
-}
-
-
-        // =================================================
-        // PERGUNTA ENCERRADA
-        // =================================================
-
-        if(
-            jogo.iniciado === true &&
-            jogo.pergunta_ativa === false &&
-            Number(jogo.numero_pergunta || 0) > 0
-        ){
-
+        if (jogo.iniciado === true && jogo.pergunta_ativa === false &&
+            Number(jogo.numero_pergunta || 0) > 0) {
             clearInterval(timer);
-
             bloquear();
-
             perguntaId = null;
-
             await carregarRanking();
-
             tela("rankingTela");
-
-
-            setTimeout(
-                verificar,
-                1000
-            );
-
             return;
         }
-
-
-        // =================================================
-        // AGUARDANDO PRIMEIRA PERGUNTA
-        // =================================================
 
         tela("aguardando");
-
-
-        setTimeout(
-            verificar,
-            1000
-        );
-
-
-    }catch(e){
-
-        console.error(e);
-
-        setTimeout(
-            verificar,
-            2000
-        );
-
+    } catch (e) {
+        console.error("Falha ao atualizar jogo:", e);
+        avisoConexao("⚠️ Conexão instável. Tentando atualizar a pergunta automaticamente...");
+    } finally {
+        verificacaoEmCurso = false;
+        if (jogadorId) agendarVerificacao(1000);
     }
-
 }
-
 
 // =====================================================
 // CARREGAR PERGUNTA
@@ -612,7 +485,7 @@ function carregar(jogo){
         jogo.numero_pergunta;
 
     respondida = false;
-
+    enviandoResposta = false;
 
     document
     .getElementById("texto")
@@ -756,138 +629,58 @@ function iniciarCronometro(inicio){
 // =====================================================
 
 async function responder(alternativa){
-
-    if(respondida){
-
+    if (respondida || enviandoResposta || !perguntaId) return;
+    // Impede respostas fora do tempo mostrado no celular.
+    if (fimDaPergunta && Date.now() >= fimDaPergunta) {
+        bloquear();
+        document.getElementById("resultado").innerText = "⏰ Tempo encerrado.";
         return;
     }
 
-
-    if(!perguntaId){
-
-        return;
-    }
-
-
-    respondida = true;
-
-
+    enviandoResposta = true;
     bloquear();
+    const perguntaEnviada = perguntaId;
 
+    try {
+        const r = await fetch("/api/responder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jogador_id: jogadorId,
+                pergunta_id: perguntaEnviada,
+                resposta: alternativa
+            })
+        });
+        const d = await r.json();
 
-    clearInterval(timer);
-
-
-    try{
-
-        const r =
-            await fetch(
-                "/api/responder",
-                {
-
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            jogador_id:
-                                jogadorId,
-
-                            pergunta_id:
-                                perguntaId,
-
-                            resposta:
-                                alternativa
-
-                        })
-                }
-            );
-
-
-        const d =
-            await r.json();
-
-
-        if(!d.sucesso){
-
-            document
-            .getElementById("resultado")
-            .innerText =
-                d.erro ||
-                "Erro ao responder.";
-
-            return;
-        }
-
-
-        if(d.correta){
-
-            document
-            .getElementById("resultado")
-            .innerText =
-                "✅ Correta! +" +
-                d.pontos +
-                " pontos";
-
-        }else{
-
-            document
-            .getElementById("resultado")
-            .innerText =
-                "❌ Resposta incorreta.";
-
-        }
-
-
-        // ================================================
-        // TODOS RESPONDERAM
-        // ================================================
-
-        if(d.finalizado){
-
+        // Uma requisição pode ter sido gravada mesmo se o retorno anterior falhou.
+        if (r.status === 409) {
+            respondida = true;
             clearInterval(timer);
-
-            perguntaId = null;
-
-            ultimaPergunta = null;
-
-            bloquear();
-
-            await carregarRankingFinal();
-
-            tela("final");
-
+            document.getElementById("resultado").innerText = "✅ Sua resposta já foi registrada.";
+            return;
+        }
+        if (!r.ok || !d.sucesso) {
+            // Só permite nova tentativa se a pergunta continuar ativa e no prazo.
+            document.getElementById("resultado").innerText = d.erro || "Falha ao enviar resposta.";
+            if (perguntaId === perguntaEnviada && Date.now() < fimDaPergunta) ativar();
             return;
         }
 
-
-        // Continua aguardando os outros jogadores
-
-        setTimeout(
-            verificar,
-            500
-        );
-
-
-    }catch(e){
-
-        console.error(e);
-
-
-        document
-        .getElementById("resultado")
-        .innerText =
-            "Erro de conexão.";
-
+        respondida = true;
+        clearInterval(timer);
+        document.getElementById("resultado").innerText = d.correta
+            ? "✅ Correta! +" + d.pontos + " pontos"
+            : "❌ Resposta incorreta.";
+    } catch (e) {
+        console.error("Falha ao responder:", e);
+        document.getElementById("resultado").innerText =
+            "⚠️ Conexão falhou. Se ainda houver tempo, toque novamente para confirmar.";
+        if (perguntaId === perguntaEnviada && Date.now() < fimDaPergunta) ativar();
+    } finally {
+        enviandoResposta = false;
     }
-
 }
-
 
 // =====================================================
 // BLOQUEAR ALTERNATIVAS
@@ -1180,6 +973,20 @@ async function carregarRankingFinal(){
 
     }
 
+}
+
+// Recupera a inscrição ao atualizar a aba durante uma partida.
+// A identidade ainda precisa ser reforçada no servidor em etapa posterior.
+try {
+    const salvo = JSON.parse(sessionStorage.getItem("desafioJogador") || "null");
+    if (salvo && Number(salvo.id) > 0) {
+        jogadorId = Number(salvo.id);
+        document.getElementById("nome").value = salvo.nome || "";
+        tela("aguardando");
+        agendarVerificacao(0);
+    }
+} catch (e) {
+    sessionStorage.removeItem("desafioJogador");
 }
 
 </script>
